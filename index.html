@@ -3,121 +3,235 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2Smart Pvt Limited</title>
+    <title>2Smart ERP v1.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-radius: 20px; }
-        .gradient-invoice { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-        .gradient-voucher { background: linear-gradient(135deg, #10b981, #059669); }
-        .gradient-accounts { background: linear-gradient(135deg, #f97316, #ea580c); }
-        .gradient-reports { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
-        body { background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: #f3f4f6; font-family: -apple-system, system-ui; user-select: none; }
+        .ios-card { background: white; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .active-tab { background: #3b82f6 !important; color: white !important; }
+        input, select { outline: none; }
     </style>
 </head>
-<body class="p-4">
+<body class="p-4 pb-20">
 
-    <div id="dashboard" class="max-w-md mx-auto">
-        <header class="flex justify-between items-center mb-8">
+    <div id="view-dashboard" class="max-w-md mx-auto">
+        <header class="flex justify-between items-center mb-6">
             <div>
-                <span class="text-blue-500 text-xs font-black tracking-widest uppercase">Management System</span>
-                <h1 class="text-2xl font-black text-gray-900 leading-tight">2SMART PVT LIMITED</h1>
+                <span class="text-blue-500 text-[10px] font-black tracking-widest uppercase">Management System</span>
+                <h1 class="text-2xl font-black text-gray-900">2SMART PVT LIMITED</h1>
             </div>
-            <button class="bg-gray-200 p-3 rounded-2xl shadow-inner">⚙️</button>
+            <button onclick="resetData()" class="bg-gray-200 p-3 rounded-2xl text-xs">Reset</button>
         </header>
 
-        <p class="text-gray-500 font-bold mb-4 uppercase text-sm tracking-tighter">Business Operations</p>
-        
         <div class="grid grid-cols-2 gap-4">
-            <div onclick="showView('invoice')" class="gradient-invoice p-6 rounded-[30px] shadow-lg text-white cursor-pointer active:scale-95 transition-transform">
-                <div class="bg-white/20 w-10 h-10 rounded-full flex items-center justify-center mb-4">📄</div>
-                <h2 class="font-bold text-lg leading-tight">INVOICE</h2>
-                <p class="text-[10px] opacity-80">Sales & Purchase</p>
+            <div onclick="openView('invoice')" class="bg-blue-600 p-6 rounded-[30px] text-white shadow-lg">
+                <div class="bg-white/20 w-8 h-8 rounded-full flex items-center justify-center mb-4">📄</div>
+                <h2 class="font-bold">INVOICE</h2>
+                <p class="text-[10px] opacity-70">Sales & Purchase</p>
             </div>
-            
-            <div onclick="showView('voucher')" class="gradient-voucher p-6 rounded-[30px] shadow-lg text-white cursor-pointer active:scale-95 transition-transform">
-                <div class="bg-white/20 w-10 h-10 rounded-full flex items-center justify-center mb-4">💰</div>
-                <h2 class="font-bold text-lg leading-tight">VOUCHER</h2>
-                <p class="text-[10px] opacity-80">Cash Flow</p>
+            <div onclick="openView('voucher')" class="bg-green-600 p-6 rounded-[30px] text-white shadow-lg">
+                <div class="bg-white/20 w-8 h-8 rounded-full flex items-center justify-center mb-4">💰</div>
+                <h2 class="font-bold">VOUCHER</h2>
+                <p class="text-[10px] opacity-70">Cash Flow</p>
             </div>
-
-            <div onclick="showView('accounts')" class="gradient-accounts p-6 rounded-[30px] shadow-lg text-white cursor-pointer active:scale-95 transition-transform">
-                <div class="bg-white/20 w-10 h-10 rounded-full flex items-center justify-center mb-4">📇</div>
-                <h2 class="font-bold text-lg leading-tight">ACCOUNTS</h2>
-                <p class="text-[10px] opacity-80">Party Balance</p>
-            </div>
-
-            <div onclick="showView('reports')" class="gradient-reports p-6 rounded-[30px] shadow-lg text-white cursor-pointer active:scale-95 transition-transform">
-                <div class="bg-white/20 w-10 h-10 rounded-full flex items-center justify-center mb-4">📊</div>
-                <h2 class="font-bold text-lg leading-tight">REPORTS</h2>
-                <p class="text-[10px] opacity-80">Audit History</p>
+            <div onclick="openView('accounts')" class="bg-orange-500 p-6 rounded-[30px] text-white shadow-lg">
+                <div class="bg-white/20 w-8 h-8 rounded-full flex items-center justify-center mb-4">📇</div>
+                <h2 class="font-bold">ACCOUNTS</h2>
+                <p class="text-[10px] opacity-70">Party Balance</p>
             </div>
         </div>
     </div>
 
-    <div id="invoice" class="hidden max-w-md mx-auto">
-        <button onclick="showView('dashboard')" class="text-blue-600 font-bold mb-4">← Back</button>
-        <div class="bg-white p-4 rounded-3xl shadow-sm border">
-            <h2 class="text-xl font-black mb-4">Invoice Entry</h2>
+    <div id="view-invoice" class="hidden max-w-md mx-auto">
+        <div class="flex items-center gap-2 mb-4">
+            <button onclick="openView('dashboard')" class="text-blue-600 font-bold">← Back</button>
+            <h2 class="text-xl font-black ml-4">Invoice Entry</h2>
+        </div>
+        <div class="ios-card p-4">
             <div class="flex gap-2 mb-4">
-                <button class="bg-blue-600 text-white flex-1 py-2 rounded-lg font-bold">SALE</button>
-                <button class="bg-gray-200 flex-1 py-2 rounded-lg font-bold">PURCHASE</button>
+                <button id="btn-sale" onclick="setInvType('SALE')" class="flex-1 py-2 rounded-xl font-bold bg-blue-600 text-white">SALE</button>
+                <button id="btn-purchase" onclick="setInvType('PURCHASE')" class="flex-1 py-2 rounded-xl font-bold bg-gray-200 text-gray-700">PURCHASE</button>
             </div>
-            <input type="text" id="inv_party" placeholder="Party Name" class="w-full p-3 bg-gray-100 rounded-xl mb-3 outline-none">
-            <input type="number" id="inv_amount" placeholder="Total Amount" class="w-full p-4 text-2xl font-bold bg-blue-50 text-blue-600 rounded-xl mb-4">
-            <button onclick="saveTransaction('SALE')" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg">POST INVOICE</button>
+            <select id="inv-party" class="w-full p-3 bg-gray-100 rounded-xl mb-3"></select>
+            <input type="number" id="inv-amount" placeholder="0.00" class="w-full p-4 text-3xl font-bold bg-blue-50 text-blue-600 rounded-xl mb-4">
+            <input type="text" id="inv-remarks" placeholder="Narration" class="w-full p-3 bg-gray-100 rounded-xl mb-4">
+            <button onclick="saveInvoice()" class="w-full bg-green-500 text-white font-black py-4 rounded-2xl">POST INVOICE</button>
         </div>
     </div>
 
-    <div id="accounts" class="hidden max-w-md mx-auto">
-        <button onclick="showView('dashboard')" class="text-blue-600 font-bold mb-4">← Back</button>
-        <div class="bg-white p-4 rounded-3xl shadow-sm mb-4">
-            <h2 class="text-xl font-black">Account Manager</h2>
-            <div id="account-list" class="mt-4 space-y-3">
-                </div>
+    <div id="view-voucher" class="hidden max-w-md mx-auto">
+        <div class="flex items-center gap-2 mb-4">
+            <button onclick="openView('dashboard')" class="text-blue-600 font-bold">← Back</button>
+            <h2 class="text-xl font-black ml-4">Voucher Entry</h2>
+        </div>
+        <div class="ios-card p-4">
+            <div class="flex gap-2 mb-4">
+                <button id="btn-rct" onclick="setVoucherType('RCT')" class="flex-1 py-2 rounded-xl font-bold bg-purple-600 text-white">RECEIPT (In)</button>
+                <button id="btn-pay" onclick="setVoucherType('PAY')" class="flex-1 py-2 rounded-xl font-bold bg-gray-200">PAYMENT (Out)</button>
+            </div>
+            <select id="vouch-party" class="w-full p-3 bg-gray-100 rounded-xl mb-3"></select>
+            <input type="number" id="vouch-amount" placeholder="0.00" class="w-full p-4 text-3xl font-bold bg-purple-50 text-purple-600 rounded-xl mb-4">
+            <input type="text" id="vouch-remarks" placeholder="Narration" class="w-full p-3 bg-gray-100 rounded-xl mb-4">
+            <button onclick="saveVoucher()" class="w-full bg-purple-600 text-white font-black py-4 rounded-2xl">POST VOUCHER</button>
+        </div>
+    </div>
+
+    <div id="view-accounts" class="hidden max-w-md mx-auto">
+        <button onclick="openView('dashboard')" class="text-blue-600 font-bold mb-4">← Back</button>
+        <h2 class="text-2xl font-black mb-4">Accounts</h2>
+        <div id="party-list" class="space-y-3"></div>
+    </div>
+
+    <div id="view-ledger" class="hidden max-w-md mx-auto">
+        <button onclick="openView('accounts')" class="text-blue-600 font-bold mb-4">← Back</button>
+        <div class="ios-card p-4 mb-4">
+            <h2 id="ledger-name" class="text-xl font-black">---</h2>
+            <p id="ledger-status" class="text-blue-500 text-xs font-bold">RECEIVABLE</p>
+            <div class="mt-2 text-right">
+                <p class="text-xs text-gray-500">Current Balance</p>
+                <p id="ledger-total" class="text-2xl font-black text-blue-600">HKD 0.00</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl overflow-hidden shadow-sm">
+            <table class="w-full text-[10px]">
+                <thead class="bg-gray-100 font-bold">
+                    <tr><th class="p-2 text-left">Date</th><th class="p-2 text-left">Particulars</th><th class="p-2 text-right">Amount</th><th class="p-2 text-right">Balance</th></tr>
+                </thead>
+                <tbody id="ledger-rows"></tbody>
+            </table>
         </div>
     </div>
 
     <script>
-        // --- DATA LOGIC ---
-        let state = JSON.parse(localStorage.getItem('2smart_data')) || { transactions: [], accounts: ['ASIF AK', 'HASAN DND', 'TMG'] };
+        // --- CORE LOGIC & DATABASE ---
+        let db = JSON.parse(localStorage.getItem('2smart_db')) || {
+            parties: [
+                { id: 'R-101', name: 'ASIF AK', type: 'Receivable' },
+                { id: 'P-102', name: 'HONGKONG', type: 'Payable' },
+                { id: 'R-104', name: 'HASAN DND', type: 'Receivable' }
+            ],
+            transactions: []
+        };
 
-        function showView(viewId) {
-            document.querySelectorAll('body > div').forEach(div => div.classList.add('hidden'));
-            document.getElementById(viewId).classList.remove('hidden');
-            if(viewId === 'accounts') renderAccounts();
+        let currentInvType = 'SALE';
+        let currentVouchType = 'RCT';
+
+        function openView(id) {
+            document.querySelectorAll('[id^="view-"]').forEach(v => v.classList.add('hidden'));
+            document.getElementById('view-' + id).classList.remove('hidden');
+            if(id === 'accounts') renderPartyList();
+            refreshSelectors();
         }
 
-        function saveTransaction(type) {
-            const party = document.getElementById('inv_party').value;
-            const amount = document.getElementById('inv_amount').value;
-            if(!party || !amount) return alert('Pora data bharein');
+        function refreshSelectors() {
+            const html = db.parties.map(p => `<option value="${p.id}">${p.id} | ${p.name}</option>`).join('');
+            document.getElementById('inv-party').innerHTML = html;
+            document.getElementById('vouch-party').innerHTML = html;
+        }
 
-            const newTx = {
-                id: Date.now(),
-                date: new Date().toLocaleDateString(),
-                party: party,
-                amount: parseFloat(amount),
-                type: type
+        function setInvType(t) {
+            currentInvType = t;
+            document.getElementById('btn-sale').className = t === 'SALE' ? 'flex-1 py-2 rounded-xl font-bold bg-blue-600 text-white' : 'flex-1 py-2 rounded-xl font-bold bg-gray-200';
+            document.getElementById('btn-purchase').className = t === 'PURCHASE' ? 'flex-1 py-2 rounded-xl font-bold bg-blue-600 text-white' : 'flex-1 py-2 rounded-xl font-bold bg-gray-200';
+        }
+
+        function setVoucherType(t) {
+            currentVouchType = t;
+            document.getElementById('btn-rct').className = t === 'RCT' ? 'flex-1 py-2 rounded-xl font-bold bg-purple-600 text-white' : 'flex-1 py-2 rounded-xl font-bold bg-gray-200';
+            document.getElementById('btn-pay').className = t === 'PAY' ? 'flex-1 py-2 rounded-xl font-bold bg-purple-600 text-white' : 'flex-1 py-2 rounded-xl font-bold bg-gray-200';
+        }
+
+        function saveInvoice() {
+            const amt = parseFloat(document.getElementById('inv-amount').value);
+            if(!amt) return;
+            const tx = {
+                id: currentInvType + '-' + Date.now(),
+                date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
+                partyId: document.getElementById('inv-party').value,
+                particulars: currentInvType + ': ' + (document.getElementById('inv-remarks').value || 'Goods'),
+                amount: amt,
+                type: currentInvType // SALE increases balance, PURCHASE decreases
             };
-
-            state.transactions.push(newTx);
-            localStorage.setItem('2smart_data', JSON.stringify(state));
-            alert('Entry Saved!');
-            showView('dashboard');
+            db.transactions.push(tx);
+            saveDB();
+            alert('Invoice Posted!');
+            openView('dashboard');
         }
 
-        function renderAccounts() {
-            const list = document.getElementById('account-list');
-            list.innerHTML = state.accounts.map(acc => `
-                <div class="p-4 bg-gray-50 rounded-2xl flex justify-between items-center border">
+        function saveVoucher() {
+            const amt = parseFloat(document.getElementById('vouch-amount').value);
+            if(!amt) return;
+            const tx = {
+                id: currentVouchType + '-' + Date.now(),
+                date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
+                partyId: document.getElementById('vouch-party').value,
+                particulars: currentVouchType + ': ' + (document.getElementById('vouch-remarks').value || 'Cash'),
+                amount: amt,
+                type: currentVouchType // RCT decreases balance, PAY increases
+            };
+            db.transactions.push(tx);
+            saveDB();
+            alert('Voucher Posted!');
+            openView('dashboard');
+        }
+
+        function renderPartyList() {
+            const list = document.getElementById('party-list');
+            list.innerHTML = db.parties.map(p => {
+                let bal = calculateBalance(p.id);
+                return `
+                <div onclick="showLedger('${p.id}')" class="ios-card p-4 flex justify-between items-center border-l-4 border-orange-500">
                     <div>
-                        <p class="font-black text-gray-800">${acc}</p>
-                        <p class="text-xs text-blue-500 font-bold uppercase">Receivable</p>
+                        <p class="font-black">${p.id} | ${p.name}</p>
+                        <p class="text-[10px] text-blue-500 font-bold uppercase">${p.type}</p>
                     </div>
-                    <span class="text-blue-600 font-black">Details →</span>
-                </div>
-            `).join('');
+                    <div class="text-right">
+                        <p class="font-black text-blue-600 underline">${bal.toLocaleString()}</p>
+                    </div>
+                </div>`;
+            }).join('');
         }
+
+        function calculateBalance(partyId) {
+            let bal = 0;
+            db.transactions.filter(t => t.partyId === partyId).forEach(t => {
+                if(t.type === 'SALE' || t.type === 'PAY') bal += t.amount;
+                if(t.type === 'PURCHASE' || t.type === 'RCT') bal -= t.amount;
+            });
+            return bal;
+        }
+
+        function showLedger(partyId) {
+            const party = db.parties.find(p => p.id === partyId);
+            document.getElementById('ledger-name').innerText = party.id + ' | ' + party.name;
+            document.getElementById('ledger-status').innerText = party.type;
+            
+            let runningBal = 0;
+            let rowsHtml = '';
+            const filtered = db.transactions.filter(t => t.partyId === partyId);
+            
+            filtered.forEach(t => {
+                if(t.type === 'SALE' || t.type === 'PAY') runningBal += t.amount;
+                if(t.type === 'PURCHASE' || t.type === 'RCT') runningBal -= t.amount;
+                
+                rowsHtml += `
+                <tr class="border-b">
+                    <td class="p-2">${t.date}</td>
+                    <td class="p-2 font-bold text-purple-700">${t.id.split('-')[0]}<br><span class="text-gray-400 font-normal">${t.particulars}</span></td>
+                    <td class="p-2 text-right font-bold ${t.type==='RCT'||t.type==='PURCHASE'?'text-red-500':'text-green-600'}">${t.amount.toLocaleString()}</td>
+                    <td class="p-2 text-right font-black">${runningBal.toLocaleString()}</td>
+                </tr>`;
+            });
+            
+            document.getElementById('ledger-rows').innerHTML = rowsHtml;
+            document.getElementById('ledger-total').innerText = 'HKD ' + runningBal.toLocaleString();
+            openView('ledger');
+        }
+
+        function saveDB() { localStorage.setItem('2smart_db', JSON.stringify(db)); }
+        function resetData() { if(confirm('Sabu delete kar dein?')) { localStorage.clear(); location.reload(); } }
+        
+        refreshSelectors();
     </script>
 </body>
 </html>
