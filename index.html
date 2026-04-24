@@ -2,228 +2,392 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2Smart ERP v4</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>2Smart Management Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <style>
-        body { font-family: -apple-system, sans-serif; background: #F2F2F7; user-select: none; }
-        .ios-card { background: white; border-radius: 20px; transition: all 0.2s; }
-        .ios-card:active { transform: scale(0.97); opacity: 0.8; }
+        :root { --ios-blue: #007AFF; --ios-bg: #F2F2F7; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--ios-bg); color: #000; -webkit-tap-highlight-color: transparent; }
+        .ios-card { background: #fff; border-radius: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; }
+        .ios-input { background: #E9E9EB; border: none; border-radius: 10px; padding: 12px; width: 100%; font-size: 16px; outline: none; }
+        .btn-ios { transition: all 0.2s; cursor: pointer; }
+        .btn-ios:active { transform: scale(0.96); opacity: 0.7; }
+        .nav-active { color: var(--ios-blue) !important; }
         .hidden { display: none !important; }
-        .tab-bar { background: rgba(255,255,255,0.8); backdrop-filter: blur(20px); border-top: 0.5px solid #d1d1d6; }
-        input, select { background: #E9E9EB; border-radius: 12px; padding: 14px; border: none; width: 100%; outline: none; font-size: 16px; }
-        .safe-area-bottom { padding-bottom: calc(env(safe-area-inset-bottom) + 80px); }
-        .ledger-line { border-bottom: 0.5px solid #E5E5EA; padding: 12px 0; }
+        .ledger-grid { display: grid; grid-template-columns: 2fr 4fr 2fr 2fr 2fr; gap: 4px; font-size: 10px; align-items: center; border-bottom: 0.5px solid #E5E5EA; padding: 10px 0; }
     </style>
 </head>
 <body class="max-w-md mx-auto">
 
-    <div id="main-content" class="safe-area-bottom min-h-screen">
-        
-        <header class="sticky top-0 bg-[#F2F2F7]/90 backdrop-blur-lg z-50 p-6 pb-2">
-            <div class="flex justify-between items-center">
-                <div>
-                    <p class="text-[10px] font-black text-blue-600 tracking-widest uppercase">2Smart Pvt Ltd</p>
-                    <h1 id="nav-title" class="text-2xl font-black italic">DASHBOARD</h1>
-                </div>
-                <div id="header-actions">
-                    <button onclick="showView('settings')" class="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center">⚙️</button>
-                </div>
-            </div>
-        </header>
+<div id="app" class="pb-24 min-h-screen relative">
+    
+    <header class="sticky top-0 bg-white/80 backdrop-blur-xl z-[1000] border-b p-5 flex justify-between items-center h-16">
+        <div class="flex items-center gap-3">
+            <button id="back-btn" onclick="app.goBack()" class="hidden text-blue-600 font-bold text-lg">❮</button>
+            <h1 id="page-title" class="text-xl font-black tracking-tight">2Smart Pro</h1>
+        </div>
+        <button onclick="app.navigate('settings')" class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">⚙️</button>
+    </header>
 
-        <section id="view-dashboard" class="p-4 space-y-4">
-            <div class="ios-card bg-blue-600 p-6 text-white shadow-xl shadow-blue-200">
-                <p class="text-[10px] font-bold opacity-70">NET RECEIVABLE (HKD)</p>
-                <h2 id="dash-bal" class="text-3xl font-black mt-1">0.00</h2>
-            </div>
+    <main id="view-container" class="p-4 space-y-5">
+        </main>
 
-            <div class="grid grid-cols-2 gap-4 mt-6">
-                <div onclick="showView('invoice')" class="ios-card p-6 flex flex-col items-center border-b-4 border-blue-500">
-                    <span class="text-3xl mb-2">📑</span>
-                    <span class="font-bold text-[11px] uppercase">Invoice</span>
-                </div>
-                <div onclick="showView('voucher')" class="ios-card p-6 flex flex-col items-center border-b-4 border-green-500">
-                    <span class="text-3xl mb-2">💰</span>
-                    <span class="font-bold text-[11px] uppercase">Voucher</span>
-                </div>
-                <div onclick="showView('accounts')" class="ios-card p-6 flex flex-col items-center border-b-4 border-orange-500">
-                    <span class="text-3xl mb-2">👥</span>
-                    <span class="font-bold text-[11px] uppercase">Accounts</span>
-                </div>
-                <div onclick="showView('reports')" class="ios-card p-6 flex flex-col items-center border-b-4 border-purple-500">
-                    <span class="text-3xl mb-2">📊</span>
-                    <span class="font-bold text-[11px] uppercase">Reports</span>
-                </div>
-            </div>
-        </section>
-
-        <section id="view-accounts" class="hidden p-4 space-y-4">
-            <input type="text" id="acc-search" placeholder="🔍 Search Party..." oninput="renderAccountList()" class="!bg-white">
-            <div id="acc-list" class="space-y-2"></div>
-        </section>
-
-        <section id="view-ledger" class="hidden p-4 space-y-4 bg-white min-h-screen">
-            <div class="flex justify-between items-center mb-6">
-                <h2 id="led-name" class="text-xl font-black text-blue-600"></h2>
-                <div class="text-right">
-                    <p class="text-[9px] text-gray-400">BALANCE</p>
-                    <p id="led-bal" class="font-black text-lg"></p>
-                </div>
-            </div>
-            <div class="grid grid-cols-5 text-[9px] font-black text-gray-400 uppercase border-b pb-2">
-                <span>Date</span><span class="col-span-2">Details</span><span>DR</span><span>CR</span>
-            </div>
-            <div id="led-rows" class="text-sm"></div>
-        </section>
-
-        <section id="view-settings" class="hidden p-4 space-y-6">
-            <div class="ios-card p-4 space-y-4">
-                <h3 class="font-black text-blue-600 border-b pb-2">Add New Party</h3>
-                <input type="text" id="new-p-name" placeholder="Party Name">
-                <select id="new-p-type">
-                    <option value="Receivable">Receivable (Customer)</option>
-                    <option value="Payable">Payable (Supplier)</option>
-                </select>
-                <button onclick="addParty()" class="bg-blue-600 text-white p-4 rounded-2xl w-full font-black">SAVE PARTY</button>
-            </div>
-            <div class="ios-card p-4">
-                <h3 class="font-black text-red-600 border-b pb-2">System Control</h3>
-                <button onclick="wipeData()" class="text-red-500 text-xs font-bold mt-4">WIPE ALL DATA (RESET)</button>
-            </div>
-        </section>
-
-    </div>
-
-    <nav class="tab-bar fixed bottom-0 left-0 right-0 h-20 flex justify-around items-center px-4 z-[100]">
-        <button onclick="showView('dashboard')" class="flex flex-col items-center gap-1 text-[10px] font-bold text-blue-600"><span>🏠</span>HOME</button>
-        <button onclick="showView('invoice')" class="flex flex-col items-center gap-1 text-[10px] font-bold text-gray-400"><span>📑</span>INVOICE</button>
-        <button onclick="showView('voucher')" class="flex flex-col items-center gap-1 text-[10px] font-bold text-gray-400"><span>💰</span>CASH</button>
-        <button onclick="showView('accounts')" class="flex flex-col items-center gap-1 text-[10px] font-bold text-gray-400"><span>📊</span>LEDGER</button>
+    <nav class="fixed bottom-0 left-0 right-0 h-20 bg-white/90 backdrop-blur-xl border-t flex justify-around items-center px-2 z-[1000]">
+        <div onclick="app.navigate('dashboard')" class="flex flex-col items-center gap-1 text-[9px] font-bold text-gray-400 btn-ios" id="tab-dashboard"><span>🏠</span>HOME</div>
+        <div onclick="app.navigate('invoice')" class="flex flex-col items-center gap-1 text-[9px] font-bold text-gray-400 btn-ios" id="tab-invoice"><span>📑</span>INVOICE</div>
+        <div onclick="app.navigate('voucher')" class="flex flex-col items-center gap-1 text-[9px] font-bold text-gray-400 btn-ios" id="tab-voucher"><span>💵</span>VOUCHERS</div>
+        <div onclick="app.navigate('accounts')" class="flex flex-col items-center gap-1 text-[9px] font-bold text-gray-400 btn-ios" id="tab-accounts"><span>📊</span>LEDGER</div>
     </nav>
+</div>
 
-    <script>
-        // --- GLOBAL DATA ---
-        let db = JSON.parse(localStorage.getItem('2Smart_V4_Final')) || {
-            parties: [{id: 101, name: 'CASH SALE', type: 'Receivable'}],
-            tx: []
+<script>
+/**
+ * 2SMART HIGH-CODE ENGINE
+ * Handling State, Navigation, and PDF Generation
+ */
+const app = {
+    state: JSON.parse(localStorage.getItem('2Smart_Pro_V5')) || {
+        parties: [{id: 1, name: 'Walking Customer', type: 'Receivable'}],
+        transactions: [],
+        settings: { company: '2Smart Pvt Limited', addr: 'HK / USA / UAE', phone: '+852' }
+    },
+    viewStack: ['dashboard'],
+
+    init() {
+        this.navigate('dashboard');
+        this.save();
+    },
+
+    save() {
+        localStorage.setItem('2Smart_Pro_V5', JSON.stringify(this.state));
+    },
+
+    navigate(view, data = null) {
+        if (this.viewStack[this.viewStack.length - 1] !== view) {
+            this.viewStack.push(view);
+        }
+        this.render(view, data);
+        
+        // Update Bottom Nav UI
+        document.querySelectorAll('nav div').forEach(el => el.classList.remove('nav-active'));
+        const tab = document.getElementById('tab-' + view);
+        if(tab) tab.classList.add('nav-active');
+
+        // Back button visibility
+        document.getElementById('back-btn').classList.toggle('hidden', view === 'dashboard');
+    },
+
+    goBack() {
+        if (this.viewStack.length > 1) {
+            this.viewStack.pop();
+            this.render(this.viewStack[this.viewStack.length - 1]);
+        }
+    },
+
+    render(view, data) {
+        const container = document.getElementById('view-container');
+        const title = document.getElementById('page-title');
+        
+        switch(view) {
+            case 'dashboard':
+                title.innerText = "2Smart Dashboard";
+                container.innerHTML = this.views.dashboard();
+                break;
+            case 'invoice':
+                title.innerText = "New Invoice";
+                container.innerHTML = this.views.invoice();
+                this.initInvoice();
+                break;
+            case 'voucher':
+                title.innerText = "Cash Voucher";
+                container.innerHTML = this.views.voucher();
+                break;
+            case 'accounts':
+                title.innerText = "Party Ledgers";
+                container.innerHTML = this.views.accounts();
+                break;
+            case 'ledger':
+                title.innerText = "Statement";
+                container.innerHTML = this.views.ledgerDetail(data);
+                break;
+            case 'settings':
+                title.innerText = "Admin Settings";
+                container.innerHTML = this.views.settings();
+                break;
+        }
+    },
+
+    views: {
+        dashboard() {
+            const bal = app.state.transactions.reduce((acc, t) => {
+                const dr = (t.type === 'SALE' || t.type === 'PAYMENT') ? t.amount : 0;
+                const cr = (t.type === 'PURCHASE' || t.type === 'RECEIPT') ? t.amount : 0;
+                return acc + (dr - cr);
+            }, 0);
+
+            return `
+                <div class="ios-card bg-gradient-to-br from-blue-600 to-blue-800 p-6 text-white">
+                    <p class="text-[10px] font-bold opacity-60 uppercase tracking-widest">Total Net Balance</p>
+                    <h2 class="text-4xl font-black mt-2">HKD ${bal.toLocaleString()}</h2>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div onclick="app.navigate('invoice')" class="ios-card p-6 flex flex-col items-center gap-3 border-b-4 border-blue-500 btn-ios">
+                        <span class="text-3xl">📄</span><span class="font-bold text-xs uppercase">Invoice</span>
+                    </div>
+                    <div onclick="app.navigate('voucher')" class="ios-card p-6 flex flex-col items-center gap-3 border-b-4 border-green-500 btn-ios">
+                        <span class="text-3xl">💰</span><span class="font-bold text-xs uppercase">Voucher</span>
+                    </div>
+                    <div onclick="app.navigate('accounts')" class="ios-card p-6 flex flex-col items-center gap-3 border-b-4 border-orange-500 btn-ios">
+                        <span class="text-3xl">👥</span><span class="font-bold text-xs uppercase">Ledger</span>
+                    </div>
+                    <div onclick="app.navigate('settings')" class="ios-card p-6 flex flex-col items-center gap-3 border-b-4 border-purple-500 btn-ios">
+                        <span class="text-3xl">⚙️</span><span class="font-bold text-xs uppercase">Admin</span>
+                    </div>
+                </div>
+            `;
+        },
+
+        accounts() {
+            const list = app.state.parties.map(p => {
+                const bal = app.getPartyBal(p.id);
+                return `
+                    <div onclick="app.navigate('ledger', ${p.id})" class="ios-card p-4 flex justify-between items-center mb-2 btn-ios">
+                        <div><p class="text-[9px] font-bold text-blue-600">${p.type}</p><h4 class="font-black text-lg">${p.name}</h4></div>
+                        <div class="text-right"><p class="font-black ${bal >= 0 ? 'text-green-600' : 'text-red-600'}">${bal.toLocaleString()}</p></div>
+                    </div>
+                `;
+            }).join('');
+            return `<div class="space-y-2">${list}</div>`;
+        },
+
+        ledgerDetail(pid) {
+            const p = app.state.parties.find(x => x.id == pid);
+            const txs = app.state.transactions.filter(t => t.partyId == pid).sort((a,b) => new Date(a.date) - new Date(b.date));
+            let rBal = 0;
+            const rows = txs.map(t => {
+                const dr = (t.type === 'SALE' || t.type === 'PAYMENT') ? t.amount : 0;
+                const cr = (t.type === 'PURCHASE' || t.type === 'RECEIPT') ? t.amount : 0;
+                rBal += (dr - cr);
+                return `
+                    <div class="ledger-grid">
+                        <span class="text-gray-400">${t.date.split('-').slice(1).join('/')}</span>
+                        <span class="font-bold">${t.no}<br><span class="text-[7px] font-normal opacity-50 uppercase">${t.type}</span></span>
+                        <span class="text-red-500">${dr || '-'}</span>
+                        <span class="text-green-600">${cr || '-'}</span>
+                        <span class="font-black">${rBal.toLocaleString()}</span>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="ios-card p-5 bg-blue-600 text-white flex justify-between">
+                    <div><h2 class="text-2xl font-black">${p.name}</h2><p class="text-[10px] opacity-70">Statement History</p></div>
+                    <div class="text-right"><p class="text-xs">BALANCE</p><h3 class="text-xl font-black italic">${rBal.toLocaleString()}</h3></div>
+                </div>
+                <div class="ios-card p-4">
+                    <div class="grid grid-cols-5 text-[9px] font-black text-gray-400 uppercase border-b pb-2 mb-2">
+                        <span>Date</span><span>Ref</span><span>Dr</span><span>Cr</span><span>Bal</span>
+                    </div>
+                    ${rows || '<p class="text-center py-10 text-gray-300">No Transactions</p>'}
+                </div>
+                <button onclick="app.exportPDF(${pid})" class="w-full bg-black text-white p-4 rounded-2xl font-bold btn-ios">Share Professional PDF</button>
+            `;
+        },
+
+        invoice() {
+            const parties = app.state.parties.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+            return `
+                <div class="ios-card p-4 space-y-4">
+                    <select id="inv-mode" class="ios-input font-bold" onchange="app.updateInvNo()">
+                        <option value="SALE">SALE INVOICE (SIN)</option>
+                        <option value="PURCHASE">PURCHASE INVOICE (PIN)</option>
+                    </select>
+                    <div class="flex gap-2">
+                        <input type="text" id="inv-no" readonly class="ios-input !bg-gray-100 font-mono text-sm">
+                        <input type="date" id="inv-date" class="ios-input">
+                    </div>
+                    <select id="inv-party" class="ios-input">${parties}</select>
+                    <div id="inv-items" class="space-y-2 border-t pt-2"></div>
+                    <button onclick="app.addInvItem()" class="text-blue-600 font-bold text-xs uppercase">+ Add Item Line</button>
+                    <div class="flex justify-between items-center border-t pt-4">
+                        <span class="font-bold">Total Amount</span>
+                        <span id="inv-total-disp" class="text-2xl font-black text-blue-600">0.00</span>
+                    </div>
+                    <button onclick="app.saveInvoice()" class="w-full bg-blue-600 text-white p-4 rounded-2xl font-black btn-ios shadow-lg">POST TRANSACTION</button>
+                </div>
+            `;
+        },
+
+        voucher() {
+            const parties = app.state.parties.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+            return `
+                <div class="ios-card p-4 space-y-4">
+                    <select id="vou-mode" class="ios-input font-bold" onchange="app.updateVouNo()">
+                        <option value="RECEIPT">CASH RECEIPT (RCT)</option>
+                        <option value="PAYMENT">CASH PAYMENT (PAY)</option>
+                    </select>
+                    <input type="text" id="vou-no" readonly class="ios-input !bg-gray-100">
+                    <input type="date" id="vou-date" class="ios-input">
+                    <select id="vou-party" class="ios-input">${parties}</select>
+                    <input type="number" id="vou-amt" placeholder="Amount (HKD)" class="ios-input text-2xl font-black text-green-600">
+                    <textarea id="vou-rem" placeholder="Remarks/Notes" class="ios-input" rows="3"></textarea>
+                    <button onclick="app.saveVoucher()" class="w-full bg-green-600 text-white p-4 rounded-2xl font-black btn-ios shadow-lg">POST VOUCHER</button>
+                </div>
+            `;
+        },
+
+        settings() {
+            return `
+                <div class="ios-card p-4 space-y-3">
+                    <h3 class="font-black text-xs uppercase text-gray-400">Add New Account</h3>
+                    <input type="text" id="new-p-name" placeholder="Name" class="ios-input">
+                    <select id="new-p-type" class="ios-input"><option value="Receivable">Receivable</option><option value="Payable">Payable</option></select>
+                    <button onclick="app.addParty()" class="w-full bg-blue-600 text-white p-4 rounded-2xl font-bold btn-ios">CREATE ACCOUNT</button>
+                </div>
+                <div class="ios-card p-4 space-y-3">
+                    <h3 class="font-black text-xs uppercase text-gray-400">Company Profile</h3>
+                    <input type="text" id="conf-name" value="${app.state.settings.company}" class="ios-input">
+                    <input type="text" id="conf-addr" value="${app.state.settings.addr}" class="ios-input">
+                    <button onclick="app.saveConf()" class="w-full bg-black text-white p-4 rounded-2xl font-bold btn-ios">UPDATE PROFILE</button>
+                </div>
+                <button onclick="app.reset()" class="w-full text-red-500 font-bold text-xs uppercase tracking-widest mt-10">Wipe All Data</button>
+            `;
+        }
+    },
+
+    // LOGIC FUNCTIONS
+    initInvoice() {
+        this.updateInvNo();
+        document.getElementById('inv-date').valueAsDate = new Date();
+        this.addInvItem();
+    },
+
+    updateInvNo() {
+        const mode = document.getElementById('inv-mode').value;
+        const count = this.state.transactions.filter(t => t.type === mode).length + 1;
+        document.getElementById('inv-no').value = (mode === 'SALE' ? 'SIN-' : 'PIN-') + count.toString().padStart(5, '0');
+    },
+
+    updateVouNo() {
+        const mode = document.getElementById('vou-mode').value;
+        const count = this.state.transactions.filter(t => t.type === mode).length + 1;
+        document.getElementById('vou-no').value = (mode === 'RECEIPT' ? 'RCT-' : 'PAY-') + count.toString().padStart(5, '0');
+    },
+
+    addInvItem() {
+        const div = document.createElement('div');
+        div.className = "flex gap-2 items-center bg-gray-50 p-2 rounded-lg";
+        div.innerHTML = `<input type="text" placeholder="Item/Lot" class="flex-1 bg-transparent text-sm outline-none"><input type="number" placeholder="Qty" oninput="app.calcTotal()" class="w-14 bg-transparent text-center text-sm outline-none"><input type="number" placeholder="Rate" oninput="app.calcTotal()" class="w-20 bg-transparent text-right text-sm font-bold outline-none">`;
+        document.getElementById('inv-items').appendChild(div);
+    },
+
+    calcTotal() {
+        let total = 0;
+        document.querySelectorAll('#inv-items div').forEach(row => {
+            const q = row.querySelectorAll('input')[1].value || 0;
+            const r = row.querySelectorAll('input')[2].value || 0;
+            total += (q * r);
+        });
+        document.getElementById('inv-total-disp').innerText = total.toLocaleString();
+    },
+
+    saveInvoice() {
+        const total = parseFloat(document.getElementById('inv-total-disp').innerText.replace(/,/g, ''));
+        if(total <= 0) return alert("Empty Invoice");
+        const tx = {
+            id: Date.now(),
+            no: document.getElementById('inv-no').value,
+            date: document.getElementById('inv-date').value,
+            partyId: document.getElementById('inv-party').value,
+            type: document.getElementById('inv-mode').value,
+            amount: total
         };
+        this.state.transactions.push(tx);
+        this.save();
+        alert("Invoice Posted!");
+        this.navigate('dashboard');
+    },
 
-        // --- NAVIGATION ENGINE (Fixed White Screen) ---
-        function showView(viewId) {
-            try {
-                // Hide all sections
-                document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
-                
-                // Show requested section
-                const target = document.getElementById('view-' + viewId);
-                if(target) {
-                    target.classList.remove('hidden');
-                    document.getElementById('nav-title').innerText = viewId.toUpperCase();
-                }
+    saveVoucher() {
+        const amt = parseFloat(document.getElementById('vou-amt').value);
+        if(!amt) return alert("Enter Amount");
+        const tx = {
+            id: Date.now(),
+            no: document.getElementById('vou-no').value,
+            date: document.getElementById('vou-date').value,
+            partyId: document.getElementById('vou-party').value,
+            type: document.getElementById('vou-mode').value,
+            amount: amt,
+            notes: document.getElementById('vou-rem').value
+        };
+        this.state.transactions.push(tx);
+        this.save();
+        alert("Voucher Posted!");
+        this.navigate('dashboard');
+    },
 
-                // Header Back Button Logic
-                const headerActions = document.getElementById('header-actions');
-                if(viewId !== 'dashboard') {
-                    headerActions.innerHTML = `<button onclick="showView('dashboard')" class="text-blue-600 font-bold text-sm">Cancel</button>`;
-                } else {
-                    headerActions.innerHTML = `<button onclick="showView('settings')" class="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center">⚙️</button>`;
-                }
+    addParty() {
+        const name = document.getElementById('new-p-name').value;
+        const type = document.getElementById('new-p-type').value;
+        if(!name) return;
+        this.state.parties.push({id: Date.now(), name, type});
+        this.save();
+        alert("Account Created");
+        this.navigate('accounts');
+    },
 
-                // Load Data for specific views
-                if(viewId === 'accounts') renderAccountList();
-                window.scrollTo(0,0);
-            } catch (e) {
-                console.error("Navigation Error:", e);
-                alert("Something went wrong. Redirecting to home.");
-                location.reload();
-            }
-        }
+    getPartyBal(pid) {
+        return this.state.transactions.filter(t => t.partyId == pid).reduce((acc, t) => {
+            const dr = (t.type === 'SALE' || t.type === 'PAYMENT') ? t.amount : 0;
+            const cr = (t.type === 'PURCHASE' || t.type === 'RECEIPT') ? t.amount : 0;
+            return acc + (dr - cr);
+        }, 0);
+    },
 
-        // --- ACCOUNT & PARTY LOGIC ---
-        function addParty() {
-            const name = document.getElementById('new-p-name').value;
-            const type = document.getElementById('new-p-type').value;
-            if(!name) return alert("Enter Party Name");
-            
-            db.parties.push({ id: Date.now(), name, type });
-            save();
-            document.getElementById('new-p-name').value = '';
-            alert("Account Created!");
-            showView('accounts');
-        }
+    exportPDF(pid) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const p = this.state.parties.find(x => x.id == pid);
+        const txs = app.state.transactions.filter(t => t.partyId == pid).sort((a,b) => new Date(a.date) - new Date(b.date));
+        
+        doc.setFontSize(20);
+        doc.text(this.state.settings.company, 15, 20);
+        doc.setFontSize(10);
+        doc.text("PARTY STATEMENT: " + p.name, 15, 30);
+        
+        let running = 0;
+        const body = txs.map(t => {
+            const dr = (t.type === 'SALE' || t.type === 'PAYMENT') ? t.amount : 0;
+            const cr = (t.type === 'PURCHASE' || t.type === 'RECEIPT') ? t.amount : 0;
+            running += (dr - cr);
+            return [t.date, t.no + " (" + t.type + ")", dr.toLocaleString(), cr.toLocaleString(), running.toLocaleString()];
+        });
 
-        function renderAccountList() {
-            const q = document.getElementById('acc-search').value.toLowerCase();
-            let html = '';
-            db.parties.filter(p => p.name.toLowerCase().includes(q)).forEach(p => {
-                const bal = getPartyBalance(p.id);
-                html += `
-                    <div onclick="openLedger(${p.id}, '${p.name}')" class="ios-card p-5 flex justify-between items-center mb-2 shadow-sm">
-                        <div>
-                            <p class="text-[9px] font-black text-gray-400 uppercase">${p.type}</p>
-                            <h4 class="font-black text-lg">${p.name}</h4>
-                        </div>
-                        <div class="text-right">
-                            <p class="font-mono font-bold ${bal >= 0 ? 'text-green-600' : 'text-red-600'}">${bal.toLocaleString()}</p>
-                            <span class="text-[10px] text-gray-300">DETAILS ❯</span>
-                        </div>
-                    </div>
-                `;
-            });
-            document.getElementById('acc-list').innerHTML = html || '<p class="text-center p-10 text-gray-400">No accounts found.</p>';
-        }
+        doc.autoTable({
+            startY: 40,
+            head: [['Date', 'Particulars', 'Debit', 'Credit', 'Balance']],
+            body: body,
+            theme: 'striped',
+            headStyles: { fillColor: [0, 122, 255] }
+        });
 
-        function openLedger(pid, pname) {
-            showView('ledger');
-            document.getElementById('led-name').innerText = pname;
-            let runningBal = 0;
-            let html = '';
-            
-            db.tx.filter(t => t.partyId == pid).forEach(t => {
-                let dr = (t.type === 'SALE' || t.type === 'PAYMENT') ? t.amount : 0;
-                let cr = (t.type === 'PURCHASE' || t.type === 'RECEIPT') ? t.amount : 0;
-                runningBal += (dr - cr);
-                
-                html += `
-                    <div class="grid grid-cols-5 ledger-line items-center">
-                        <span class="text-[10px] text-gray-400">${t.date.split('-').slice(1).join('/')}</span>
-                        <span class="col-span-2 font-bold text-[11px] leading-tight">${t.no}<br><span class="text-[9px] font-normal opacity-50">${t.type}</span></span>
-                        <span class="text-red-500 font-bold">${dr || '-'}</span>
-                        <span class="text-green-600 font-bold">${cr || '-'}</span>
-                    </div>
-                `;
-            });
-            
-            document.getElementById('led-rows').innerHTML = html;
-            document.getElementById('led-bal').innerText = runningBal.toLocaleString();
-        }
+        doc.save(`${p.name}_Statement.pdf`);
+    },
 
-        function getPartyBalance(pid) {
-            return db.tx.filter(t => t.partyId == pid).reduce((acc, t) => {
-                let dr = (t.type === 'SALE' || t.type === 'PAYMENT') ? t.amount : 0;
-                let cr = (t.type === 'PURCHASE' || t.type === 'RECEIPT') ? t.amount : 0;
-                return acc + (dr - cr);
-            }, 0);
-        }
+    saveConf() {
+        this.state.settings.company = document.getElementById('conf-name').value;
+        this.state.settings.addr = document.getElementById('conf-addr').value;
+        this.save();
+        alert("Settings Updated");
+    },
 
-        // --- SYSTEM UTILS ---
-        function save() { 
-            localStorage.setItem('2Smart_V4_Final', JSON.stringify(db)); 
-            updateDashBal();
-        }
-        function updateDashBal() {
-            const total = db.tx.reduce((acc, t) => {
-                let dr = (t.type === 'SALE' || t.type === 'PAYMENT') ? t.amount : 0;
-                let cr = (t.type === 'PURCHASE' || t.type === 'RECEIPT') ? t.amount : 0;
-                return acc + (dr - cr);
-            }, 0);
-            document.getElementById('dash-bal').innerText = total.toLocaleString(undefined, {minimumFractionDigits: 2});
-        }
-        function wipeData() { if(confirm("This will delete everything. Proceed?")) { localStorage.clear(); location.reload(); } }
+    reset() { if(confirm("Erase all data?")) { localStorage.clear(); location.reload(); } }
+};
 
-        // Start
-        updateDashBal();
-    </script>
+// Start App
+app.init();
+</script>
 </body>
 </html>
