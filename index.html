@@ -3,50 +3,231 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2Smart BM</title>
+    <title>2Smart Business Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: -apple-system, sans-serif; background: #f2f2f7; }
-        .ios-card { background: white; border-radius: 15px; padding: 15px; shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        body { font-family: -apple-system, sans-serif; background: #f2f2f7; overflow-x: hidden; }
+        .ios-card { background: white; border-radius: 15px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .hidden { display: none; }
+        input, select, textarea { border: 1px solid #ddd; padding: 12px; border-radius: 10px; width: 100%; font-size: 16px; }
+        .nav-btn { display: flex; flex-direction: column; align-items: center; font-size: 10px; font-weight: bold; color: #8e8e93; }
+        .nav-active { color: #007aff; }
     </style>
 </head>
-<body class="p-4">
-    <div class="max-w-md mx-auto space-y-6">
-        <header class="py-4">
-            <h1 class="text-3xl font-black text-gray-900">2Smart BM</h1>
-            <p class="text-gray-500 font-medium text-sm uppercase tracking-widest">Business Manager</p>
-        </header>
+<body class="pb-24">
 
-        <div class="grid grid-cols-2 gap-4">
-            <div class="ios-card bg-blue-600 text-white flex flex-col items-center justify-center space-y-2 py-8">
-                <span class="text-3xl">📄</span>
-                <span class="font-bold text-xs">INVOICE</span>
-            </div>
-            <div class="ios-card bg-purple-600 text-white flex flex-col items-center justify-center space-y-2 py-8">
-                <span class="text-3xl">💰</span>
-                <span class="font-bold text-xs">VOUCHERS</span>
-            </div>
-        </div>
+<div id="app">
+    <header class="bg-white p-4 sticky top-0 z-50 border-b flex justify-between items-center">
+        <h1 id="page-title" class="text-xl font-bold text-gray-900">Dashboard</h1>
+        <button onclick="resetData()" class="text-red-500 text-xs font-bold">RESET</button>
+    </header>
 
-        <div class="ios-card bg-white border border-gray-100">
-            <h3 class="text-xs font-bold text-gray-400 mb-4 uppercase tracking-wider">Quick Actions</h3>
-            <div class="space-y-4">
-                <div class="flex items-center justify-between border-b pb-3 text-sm font-medium">
-                    <span>Add New Customer</span>
-                    <span class="text-blue-600">→</span>
+    <main class="p-4">
+        <section id="view-dashboard" class="space-y-6">
+            <div class="grid grid-cols-2 gap-4">
+                <div onclick="showView('invoice')" class="ios-card bg-blue-600 text-white flex flex-col items-center py-6 cursor-pointer">
+                    <span class="text-3xl">📄</span>
+                    <span class="mt-2 font-bold uppercase tracking-tight">Invoice</span>
                 </div>
-                <div class="flex items-center justify-between border-b pb-3 text-sm font-medium">
-                    <span>View Today's Sales</span>
-                    <span class="text-blue-600">→</span>
+                <div onclick="showView('voucher')" class="ios-card bg-purple-600 text-white flex flex-col items-center py-6 cursor-pointer">
+                    <span class="text-3xl">💰</span>
+                    <span class="mt-2 font-bold uppercase tracking-tight">Voucher</span>
                 </div>
-                <div class="flex items-center justify-between text-sm font-medium">
-                    <span>Account Settings</span>
-                    <span class="text-blue-600">→</span>
+                <div onclick="showView('accounts')" class="ios-card bg-orange-500 text-white flex flex-col items-center py-6 cursor-pointer">
+                    <span class="text-3xl">👤</span>
+                    <span class="mt-2 font-bold uppercase tracking-tight">Accounts</span>
+                </div>
+                <div onclick="showView('history')" class="ios-card bg-emerald-600 text-white flex flex-col items-center py-6 cursor-pointer">
+                    <span class="text-3xl">📊</span>
+                    <span class="mt-2 font-bold uppercase tracking-tight">History</span>
                 </div>
             </div>
-        </div>
+            <div class="ios-card">
+                <h3 class="text-gray-400 text-[10px] font-black uppercase mb-3">Quick Summary</h3>
+                <div id="summary-content" class="text-sm font-bold text-gray-700 italic">No transactions yet.</div>
+            </div>
+        </section>
 
-        <p class="text-center text-[10px] text-gray-400 mt-10">Software is ready to be customized.</p>
-    </div>
+        <section id="view-invoice" class="hidden space-y-4">
+            <div class="ios-card space-y-3">
+                <select id="inv-type" onchange="updateInvNo()" class="font-bold text-blue-600">
+                    <option value="SALE">SALE INVOICE</option>
+                    <option value="PURCHASE">PURCHASE INVOICE</option>
+                </select>
+                <input type="text" id="inv-no" readonly class="bg-gray-100 font-mono">
+                <input type="date" id="inv-date">
+                <select id="inv-party"></select>
+            </div>
+            <div id="inv-items" class="space-y-2"></div>
+            <button onclick="addInvRow()" class="w-full p-3 border-2 border-dashed border-blue-300 rounded-xl text-blue-500 font-bold text-sm">+ Add Item/Lot</button>
+            <div class="p-4 bg-gray-900 text-white rounded-2xl flex justify-between items-center shadow-lg">
+                <span class="font-bold">Total HKD:</span>
+                <span id="inv-total" class="text-2xl font-black">0</span>
+            </div>
+            <button onclick="saveInvoice()" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black shadow-xl">SAVE & POST</button>
+        </section>
+
+        <section id="view-voucher" class="hidden space-y-4">
+            <div class="ios-card space-y-4">
+                <select id="vou-type" onchange="updateVouNo()" class="font-bold text-purple-600">
+                    <option value="RECEIPT">CASH RECEIPT</option>
+                    <option value="PAYMENT">CASH PAYMENT</option>
+                </select>
+                <input type="text" id="vou-no" readonly class="bg-gray-100">
+                <input type="date" id="vou-date">
+                <select id="vou-party"></select>
+                <input type="number" id="vou-amt" placeholder="Enter Amount (HKD)" class="text-xl font-bold">
+                <textarea id="vou-rem" placeholder="Remarks (e.g. For iPhone Lot X)"></textarea>
+            </div>
+            <button onclick="saveVoucher()" class="w-full py-4 bg-purple-600 text-white rounded-2xl font-black shadow-xl">POST VOUCHER</button>
+        </section>
+
+        <section id="view-accounts" class="hidden space-y-4">
+            <div class="ios-card flex gap-2">
+                <input type="text" id="acc-name" placeholder="New Party/Customer Name">
+                <button onclick="addAccount()" class="bg-blue-600 text-white px-4 rounded-xl font-bold">ADD</button>
+            </div>
+            <div id="acc-list" class="space-y-2"></div>
+        </section>
+
+        <section id="view-history" class="hidden space-y-2">
+            <div id="tx-list" class="space-y-2 text-sm"></div>
+        </section>
+    </main>
+
+    <nav class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t p-3 flex justify-around shadow-2xl">
+        <div onclick="showView('dashboard')" id="nav-dashboard" class="nav-btn nav-active"><span>🏠</span><span>Home</span></div>
+        <div onclick="showView('invoice')" id="nav-invoice" class="nav-btn"><span>📄</span><span>Invoice</span></div>
+        <div onclick="showView('voucher')" id="nav-voucher" class="nav-btn"><span>💰</span><span>Voucher</span></div>
+        <div onclick="showView('accounts')" id="nav-accounts" class="nav-btn"><span>👤</span><span>Parties</span></div>
+    </nav>
+</div>
+
+<script>
+    let db = JSON.parse(localStorage.getItem('2smart_db')) || { parties: [{id:1, name:'Cash'}], tx: [] };
+
+    function saveDB() { 
+        localStorage.setItem('2smart_db', JSON.stringify(db)); 
+        renderSummary();
+    }
+
+    function showView(v) {
+        document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
+        document.getElementById('view-'+v).classList.remove('hidden');
+        document.getElementById('page-title').innerText = v.toUpperCase();
+        document.querySelectorAll('.nav-btn').forEach(n => n.classList.remove('nav-active'));
+        document.getElementById('nav-'+v).classList.add('nav-active');
+
+        if(v==='invoice') { resetInvoice(); loadParties('inv-party'); }
+        if(v==='voucher') { resetVoucher(); loadParties('vou-party'); }
+        if(v==='accounts') renderAccounts();
+        if(v==='history') renderHistory();
+    }
+
+    function loadParties(id) {
+        document.getElementById(id).innerHTML = db.parties.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    }
+
+    // --- INVOICE ---
+    function resetInvoice() {
+        updateInvNo();
+        document.getElementById('inv-date').valueAsDate = new Date();
+        document.getElementById('inv-items').innerHTML = '';
+        addInvRow();
+        calcTotal();
+    }
+    function updateInvNo() {
+        const type = document.getElementById('inv-type').value;
+        const count = db.tx.filter(t => t.type === type).length;
+        document.getElementById('inv-no').value = (type === 'SALE' ? 'SAL-' : 'PUR-') + (count + 1).toString().padStart(4, '0');
+    }
+    function addInvRow() {
+        const div = document.createElement('div');
+        div.className = "flex gap-2 bg-white p-2 rounded-lg shadow-sm";
+        div.innerHTML = `<input type="text" placeholder="Item" class="flex-1 text-sm"><input type="number" placeholder="Qty" oninput="calcTotal()" class="w-14 text-center"><input type="number" placeholder="Rate" oninput="calcTotal()" class="w-20 text-right">`;
+        document.getElementById('inv-items').appendChild(div);
+    }
+    function calcTotal() {
+        let t = 0;
+        document.querySelectorAll('#inv-items div').forEach(row => {
+            const q = row.querySelectorAll('input')[1].value || 0;
+            const r = row.querySelectorAll('input')[2].value || 0;
+            t += q * r;
+        });
+        document.getElementById('inv-total').innerText = t.toLocaleString();
+    }
+    function saveInvoice() {
+        const total = parseFloat(document.getElementById('inv-total').innerText.replace(/,/g,''));
+        if(total <= 0) return alert("Add items!");
+        db.tx.push({
+            id: Date.now(),
+            no: document.getElementById('inv-no').value,
+            type: document.getElementById('inv-type').value,
+            date: document.getElementById('inv-date').value,
+            party: document.getElementById('inv-party').options[document.getElementById('inv-party').selectedIndex].text,
+            amount: total
+        });
+        saveDB(); alert("Saved!"); showView('dashboard');
+    }
+
+    // --- VOUCHER ---
+    function resetVoucher() {
+        updateVouNo();
+        document.getElementById('vou-date').valueAsDate = new Date();
+        document.getElementById('vou-amt').value = '';
+        document.getElementById('vou-rem').value = '';
+    }
+    function updateVouNo() {
+        const type = document.getElementById('vou-type').value;
+        const count = db.tx.filter(t => t.type === type).length;
+        document.getElementById('vou-no').value = (type === 'RECEIPT' ? 'RCT-' : 'PAY-') + (count + 1).toString().padStart(4, '0');
+    }
+    function saveVoucher() {
+        const amt = parseFloat(document.getElementById('vou-amt').value);
+        if(!amt) return alert("Amount?");
+        db.tx.push({
+            id: Date.now(),
+            no: document.getElementById('vou-no').value,
+            type: document.getElementById('vou-type').value,
+            date: document.getElementById('vou-date').value,
+            party: document.getElementById('vou-party').options[document.getElementById('vou-party').selectedIndex].text,
+            amount: amt,
+            rem: document.getElementById('vou-rem').value
+        });
+        saveDB(); alert("Voucher Posted!"); showView('dashboard');
+    }
+
+    // --- ACCOUNTS ---
+    function addAccount() {
+        const n = document.getElementById('acc-name').value;
+        if(!n) return;
+        db.parties.push({id: Date.now(), name: n});
+        document.getElementById('acc-name').value = '';
+        saveDB(); renderAccounts();
+    }
+    function renderAccounts() {
+        document.getElementById('acc-list').innerHTML = db.parties.map(p => `<div class="ios-card font-bold">${p.name}</div>`).join('');
+    }
+
+    function renderHistory() {
+        document.getElementById('tx-list').innerHTML = db.tx.map(t => `
+            <div class="ios-card flex justify-between items-center">
+                <div><div class="font-black">${t.no}</div><div class="text-[10px] text-gray-400">${t.party} | ${t.date}</div></div>
+                <div class="text-right font-black ${t.type.includes('SALE') || t.type.includes('RECEIPT') ? 'text-green-600' : 'text-red-600'}">${t.amount.toLocaleString()}</div>
+            </div>
+        `).reverse().join('');
+    }
+
+    function renderSummary() {
+        if(db.tx.length === 0) return;
+        const sales = db.tx.filter(t => t.type === 'SALE').reduce((a,b) => a + b.amount, 0);
+        const rct = db.tx.filter(t => t.type === 'RECEIPT').reduce((a,b) => a + b.amount, 0);
+        document.getElementById('summary-content').innerHTML = `Total Sales: HKD ${sales.toLocaleString()}<br>Total Received: HKD ${rct.toLocaleString()}`;
+    }
+
+    function resetData() { if(confirm("Clear all data?")) { localStorage.clear(); location.reload(); } }
+
+    renderSummary();
+</script>
 </body>
 </html>
