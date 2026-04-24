@@ -3,255 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2Smart Pvt Ltd | Pro Suite</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <title>2Smart Pro ERP</title>
     
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+
     <style>
-        :root { --ios-blue: #007AFF; --ios-purple: #5856D6; }
-        body { background: #F2F2F7; font-family: -apple-system, system-ui, sans-serif; color: #1C1C1E; overflow-x: hidden; }
-        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.3); }
-        .btn-active { transform: scale(0.96); opacity: 0.8; }
-        .gradient-blue { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
-        .gradient-green { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
-        .gradient-orange { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
-        .gradient-purple { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .ios-shadow { box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1); }
-        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; }
+        body { font-family: 'Inter', sans-serif; background-color: #F2F2F7; }
+        .ios-blur { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+        .screen { display: none; min-height: 100vh; transition: all 0.3s ease; }
+        .active-screen { display: block; }
+        /* Lush Gradients from your images */
+        .grad-blue { background: linear-gradient(135deg, #007AFF, #00C6FF); }
+        .grad-purple { background: linear-gradient(135deg, #5856D6, #AF52DE); }
+        .grad-orange { background: linear-gradient(135deg, #FF9500, #FFCC00); }
     </style>
 </head>
-<body class="pb-24">
+<body>
 
-    <nav class="sticky top-0 z-50 glass p-4 flex justify-between items-center ios-shadow">
-        <div id="nav-title">
-            <span class="text-[10px] font-black text-blue-500 tracking-widest uppercase">Management System</span>
-            <h1 class="text-xl font-black">2SMART PVT LTD</h1>
-        </div>
-        <button onclick="resetSystem()" class="bg-gray-100 p-2 rounded-full text-lg">⚙️</button>
-    </nav>
-
-    <main class="p-4 max-w-2xl mx-auto">
+    <div id="app">
         
-        <div id="view-dash" class="space-y-6">
-            <p class="text-gray-500 font-bold text-xs uppercase tracking-widest">Business Operations</p>
-            <div class="grid grid-cols-2 gap-4">
-                <div onclick="showView('invoice')" class="gradient-blue p-6 rounded-[32px] text-white ios-shadow cursor-pointer active:btn-active">
-                    <div class="bg-white/20 w-10 h-10 rounded-2xl flex items-center justify-center mb-6 text-xl">📄</div>
-                    <h3 class="font-black text-lg">INVOICE</h3>
-                    <p class="text-[10px] font-medium opacity-80">Sales & Purchase</p>
-                </div>
-                <div onclick="showView('voucher')" class="gradient-green p-6 rounded-[32px] text-white ios-shadow cursor-pointer active:btn-active">
-                    <div class="bg-white/20 w-10 h-10 rounded-2xl flex items-center justify-center mb-6 text-xl">💵</div>
-                    <h3 class="font-black text-lg">VOUCHER</h3>
-                    <p class="text-[10px] font-medium opacity-80">Cash Flow</p>
-                </div>
-                <div onclick="showView('accounts')" class="gradient-orange p-6 rounded-[32px] text-white ios-shadow cursor-pointer active:btn-active">
-                    <div class="bg-white/20 w-10 h-10 rounded-2xl flex items-center justify-center mb-6 text-xl">📇</div>
-                    <h3 class="font-black text-lg">ACCOUNTS</h3>
-                    <p class="text-[10px] font-medium opacity-80">Party Balance</p>
-                </div>
-                <div onclick="alert('Reports coming soon!')" class="gradient-purple p-6 rounded-[32px] text-white ios-shadow cursor-pointer active:btn-active">
-                    <div class="bg-white/20 w-10 h-10 rounded-2xl flex items-center justify-center mb-6 text-xl">📊</div>
-                    <h3 class="font-black text-lg">REPORTS</h3>
-                    <p class="text-[10px] font-medium opacity-80">Audit History</p>
-                </div>
+        <header class="sticky top-0 z-50 ios-blur p-4 flex justify-between items-center border-b border-gray-200">
+            <div id="header-context">
+                <p class="text-[10px] font-black text-blue-600 tracking-widest uppercase">2Smart Pvt Ltd</p>
+                <h2 id="view-title" class="text-xl font-black text-gray-900 leading-tight">DASHBOARD</h2>
             </div>
-        </div>
-
-        <div id="view-invoice" class="hidden space-y-4">
-            <button onclick="showView('dash')" class="text-blue-500 font-bold">← Back to Home</button>
-            <div class="bg-white rounded-[32px] p-6 ios-shadow">
-                <div class="flex bg-gray-100 p-1 rounded-2xl mb-6">
-                    <button id="mode-sale" onclick="setMode('SALE')" class="flex-1 py-3 rounded-xl font-black bg-white shadow-sm text-blue-600 transition-all">SALE</button>
-                    <button id="mode-pur" onclick="setMode('PURCHASE')" class="flex-1 py-3 rounded-xl font-black text-gray-500 transition-all">PURCHASE</button>
-                </div>
-                
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-[10px] font-bold text-gray-400 uppercase ml-2">Select Party</label>
-                        <select id="inv-party" class="w-full p-4 bg-gray-50 border rounded-2xl font-bold"></select>
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-gray-400 uppercase ml-2">Total Amount</label>
-                        <input type="number" id="inv-amount" placeholder="0.00" class="w-full p-6 text-4xl font-black bg-blue-50 text-blue-600 rounded-[24px]">
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-gray-400 uppercase ml-2">Narration</label>
-                        <textarea id="inv-note" placeholder="Item details, model, qty..." class="w-full p-4 bg-gray-50 border rounded-2xl h-24"></textarea>
-                    </div>
-                    <button onclick="processInvoice()" class="w-full bg-blue-600 text-white font-black py-5 rounded-[24px] text-lg shadow-lg active:btn-active">POST & SAVE</button>
-                </div>
+            <div class="flex gap-2">
+                <button onclick="App.sync()" class="bg-gray-100 p-2 rounded-xl">🔄</button>
+                <button onclick="App.settings()" class="bg-gray-100 p-2 rounded-xl">⚙️</button>
             </div>
-        </div>
+        </header>
 
-        <div id="view-accounts" class="hidden space-y-4">
-            <button onclick="showView('dash')" class="text-blue-500 font-bold">← Back</button>
-            <h2 class="text-2xl font-black">Account Ledger</h2>
-            <div id="acc-list-container" class="space-y-3"></div>
-        </div>
+        <main id="screen-container" class="p-4">
+            </main>
 
-        <div id="view-ledger-detail" class="hidden space-y-4">
-            <button onclick="showView('accounts')" class="text-blue-500 font-bold">← Back to List</button>
-            <div class="bg-white rounded-3xl p-6 ios-shadow text-center">
-                <h2 id="ledger-title" class="text-2xl font-black uppercase">ASIF AK</h2>
-                <span class="bg-blue-100 text-blue-600 text-[10px] px-3 py-1 rounded-full font-black">RECEIVABLE</span>
-                <div class="mt-6 flex justify-between items-end border-t pt-4">
-                    <div class="text-left"><p class="text-gray-400 text-xs font-bold uppercase">Balance HKD</p></div>
-                    <h3 id="ledger-balance" class="text-3xl font-black text-blue-600">3,090,000.00</h3>
-                </div>
-            </div>
-
-            <div class="overflow-x-auto bg-white rounded-3xl ios-shadow">
-                <table class="w-full text-xs">
-                    <thead class="bg-gray-50 border-b">
-                        <tr>
-                            <th class="p-3 text-left">Date</th>
-                            <th class="p-3 text-left">Particulars</th>
-                            <th class="p-3 text-right">Amount</th>
-                            <th class="p-3 text-right">Balance</th>
-                        </tr>
-                    </thead>
-                    <tbody id="ledger-table-body"></tbody>
-                </table>
-            </div>
-            <button onclick="generatePDF()" class="w-full bg-black text-white font-black py-4 rounded-2xl flex items-center justify-center gap-3 active:btn-active">
-                📤 Share Professional Ledger
-            </button>
-        </div>
-
-    </main>
+    </div>
 
     <script>
-        // --- PRO DATA ENGINE ---
-        let db = JSON.parse(localStorage.getItem('2smart_pro_db')) || {
-            parties: [
-                {id: 'R-101', name: 'ASIF AK', type: 'Receivable'},
-                {id: 'P-102', name: 'HONGKONG', type: 'Payable'},
-                {id: 'R-103', name: 'TMG', type: 'Receivable'},
-                {id: 'R-104', name: 'HASAN DND', type: 'Receivable'}
-            ],
-            tx: []
+        /**
+         * APP STATE ENGINE (Like AppState in SwiftUI)
+         * Isme humara sara logic aur data store hoga.
+         */
+        const App = {
+            // Internal Database
+            state: {
+                user: "Admin",
+                transactions: [],
+                accounts: [
+                    { id: 'R-101', name: 'ASIF AK', type: 'Receivable' },
+                    { id: 'P-102', name: 'HONGKONG', type: 'Payable' }
+                ],
+                currentView: 'dashboard'
+            },
+
+            // Initialization
+            init() {
+                console.log("2Smart System Initialized...");
+                this.loadData();
+                this.renderDashboard(); // Sabse pehle dashboard dikhao
+            },
+
+            // Navigation Logic
+            navigate(viewName, title) {
+                document.getElementById('view-title').innerText = title.toUpperCase();
+                this.state.currentView = viewName;
+                // Hum component-based rendering karenge
+                this['render' + viewName.charAt(0).toUpperCase() + viewName.slice(1)]();
+            },
+
+            // Data Persistence
+            saveData() {
+                localStorage.setItem('2smart_pro_state', JSON.stringify(this.state));
+            },
+
+            loadData() {
+                const saved = localStorage.getItem('2smart_pro_state');
+                if (saved) this.state = JSON.parse(saved);
+            },
+
+            // View Renders (Inhe hum ek ek karke detail mein likhenge)
+            renderDashboard() {
+                const container = document.getElementById('screen-container');
+                container.innerHTML = `
+                    <div class="grid grid-cols-2 gap-4 fade-in">
+                        <div onclick="App.navigate('invoice', 'Invoicing')" class="grad-blue p-6 rounded-[30px] text-white shadow-lg active:scale-95 transition-all cursor-pointer">
+                            <div class="bg-white/20 w-10 h-10 rounded-2xl flex items-center justify-center mb-6">📄</div>
+                            <h3 class="font-black text-lg">INVOICE</h3>
+                            <p class="text-[10px] opacity-80 uppercase font-bold">Sales & Purchase</p>
+                        </div>
+                        <div onclick="App.navigate('voucher', 'Vouchers')" class="grad-purple p-6 rounded-[30px] text-white shadow-lg active:scale-95 transition-all cursor-pointer">
+                            <div class="bg-white/20 w-10 h-10 rounded-2xl flex items-center justify-center mb-6">💰</div>
+                            <h3 class="font-black text-lg">VOUCHER</h3>
+                            <p class="text-[10px] opacity-80 uppercase font-bold">Cash Flow</p>
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderInvoice() {
+                // Next discussion mein iski detailed coding karenge
+                document.getElementById('screen-container').innerHTML = `
+                    <button onclick="App.navigate('dashboard', 'Dashboard')" class="mb-4 font-bold text-blue-600">← Back</button>
+                    <div class="bg-white p-6 rounded-[30px] shadow-sm">
+                        <h2 class="text-2xl font-black">Invoice Module</h2>
+                        <p class="text-gray-400">Loading Pro UI...</p>
+                    </div>
+                `;
+            }
         };
 
-        let currentMode = 'SALE';
-        let activeParty = null;
-
-        function showView(id) {
-            document.querySelectorAll('main > div').forEach(d => d.classList.add('hidden'));
-            document.getElementById('view-' + id).classList.remove('hidden');
-            if(id === 'accounts') renderAccounts();
-            populateParties();
-        }
-
-        function populateParties() {
-            const select = document.getElementById('inv-party');
-            if(select) {
-                select.innerHTML = db.parties.map(p => `<option value="${p.id}">${p.id} | ${p.name}</option>`).join('');
-            }
-        }
-
-        function setMode(m) {
-            currentMode = m;
-            document.getElementById('mode-sale').className = m === 'SALE' ? "flex-1 py-3 rounded-xl font-black bg-white shadow-sm text-blue-600" : "flex-1 py-3 rounded-xl font-black text-gray-500";
-            document.getElementById('mode-pur').className = m === 'PURCHASE' ? "flex-1 py-3 rounded-xl font-black bg-white shadow-sm text-blue-600" : "flex-1 py-3 rounded-xl font-black text-gray-500";
-        }
-
-        function processInvoice() {
-            const amt = parseFloat(document.getElementById('inv-amount').value);
-            if(!amt || amt <= 0) return alert("Bhai, amount to sahi likho!");
-            
-            const newEntry = {
-                id: currentMode === 'SALE' ? `SIN-${(db.tx.length + 1).toString().padStart(5, '0')}` : `PUR-${(db.tx.length + 1).toString().padStart(5, '0')}`,
-                date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
-                partyId: document.getElementById('inv-party').value,
-                desc: document.getElementById('inv-note').value || 'Mobile Stock',
-                amt: amt,
-                type: currentMode
-            };
-
-            db.tx.push(newEntry);
-            save();
-            alert("Record Saved Successfully!");
-            showView('dash');
-        }
-
-        function renderAccounts() {
-            const container = document.getElementById('acc-list-container');
-            container.innerHTML = db.parties.map(p => {
-                const bal = getBal(p.id);
-                return `
-                <div onclick="openLedger('${p.id}')" class="bg-white p-5 rounded-[24px] flex justify-between items-center border border-gray-100 active:btn-active shadow-sm">
-                    <div>
-                        <h4 class="font-black text-gray-900">${p.id} | ${p.name}</h4>
-                        <p class="text-[9px] font-black text-blue-500 uppercase tracking-tighter">${p.type}</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-lg font-black text-gray-800">${bal.toLocaleString()}</p>
-                        <p class="text-[8px] text-gray-400 font-bold">HKD</p>
-                    </div>
-                </div>`;
-            }).join('');
-        }
-
-        function getBal(pId) {
-            let b = 0;
-            db.tx.filter(t => t.partyId === pId).forEach(t => {
-                if(t.type === 'SALE' || t.type === 'PAY') b += t.amt;
-                else b -= t.amt;
-            });
-            return b;
-        }
-
-        function openLedger(pId) {
-            activeParty = db.parties.find(p => p.id === pId);
-            document.getElementById('ledger-title').innerText = activeParty.name;
-            
-            let runBal = 0;
-            let rows = '';
-            db.tx.filter(t => t.partyId === pId).forEach(t => {
-                if(t.type === 'SALE' || t.type === 'PAY') runBal += t.amt;
-                else runBal -= t.amt;
-                
-                rows += `<tr class="border-b">
-                    <td class="p-3 text-gray-500">${t.date}</td>
-                    <td class="p-3"><span class="font-black text-purple-600 text-[10px]">${t.id}</span><br>${t.desc}</td>
-                    <td class="p-3 text-right font-bold ${t.amt > 0 ? 'text-green-600' : 'text-red-500'}">${t.amt.toLocaleString()}</td>
-                    <td class="p-3 text-right font-black">${runBal.toLocaleString()}</td>
-                </tr>`;
-            });
-
-            document.getElementById('ledger-table-body').innerHTML = rows;
-            document.getElementById('ledger-balance').innerText = runBal.toLocaleString() + '.00';
-            showView('ledger-detail');
-        }
-
-        // --- PDF EXPORT ENGINE ---
-        function generatePDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            doc.setFontSize(22);
-            doc.text("2SMART PVT LIMITED", 14, 20);
-            doc.setFontSize(10);
-            doc.text(`Ledger Report: ${activeParty.name} (${activeParty.id})`, 14, 30);
-            doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 35);
-            
-            const head = [['Date', 'Voucher', 'Description', 'Amount', 'Balance']];
-            let rBal = 0;
-            const body = db.tx.filter(t => t.partyId === activeParty.id).map(t => {
-                if(t.type === 'SALE' || t.type === 'PAY') rBal += t.amt; else rBal -= t.amt;
-                return [t.date, t.id, t.desc, t.amt.toLocaleString(), rBal.toLocaleString()];
-            });
-
-            doc.autoTable({ head, body, startY: 45, theme: 'grid' });
-            doc.save(`${activeParty.name}_Ledger.pdf`);
-        }
-
-        function save() { localStorage.setItem('2smart_pro_db', JSON.stringify(db)); }
-        function resetSystem() { if(confirm("Clear all data?")) { localStorage.clear(); location.reload(); } }
-        
-        populateParties();
+        // Start the Engine
+        window.onload = () => App.init();
     </script>
 </body>
 </html>
