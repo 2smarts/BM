@@ -101,15 +101,55 @@
             },
 
             renderInvoice() {
-                // Next discussion mein iski detailed coding karenge
-                document.getElementById('screen-container').innerHTML = `
-                    <button onclick="App.navigate('dashboard', 'Dashboard')" class="mb-4 font-bold text-blue-600">← Back</button>
-                    <div class="bg-white p-6 rounded-[30px] shadow-sm">
-                        <h2 class="text-2xl font-black">Invoice Module</h2>
-                        <p class="text-gray-400">Loading Pro UI...</p>
-                    </div>
-                `;
-            }
+    const container = document.getElementById('screen-container');
+    const invCount = this.state.transactions.filter(t => t.type === 'SALE' || t.type === 'PURCHASE').length + 1;
+    const invNo = `SIN-${String(invCount).padStart(5, '0')}`;
+
+    container.innerHTML = `
+        <div class="space-y-6">
+            <button onclick="App.navigate('dashboard', 'Dashboard')" class="text-blue-600 font-bold">← Back</button>
+            
+            <div class="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100 space-y-5">
+                <div class="flex justify-between items-center border-b pb-4">
+                    <h2 class="text-xl font-black text-blue-600">${invNo}</h2>
+                    <p class="font-bold text-gray-400">${new Date().toLocaleDateString('en-GB')}</p>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase ml-2">Party Name</label>
+                    <select id="inv-party-id" class="w-full p-4 bg-gray-50 rounded-2xl font-bold">
+                        ${this.state.accounts.map(acc => `<option value="${acc.id}">${acc.name}</option>`).join('')}
+                    </select>
+                </div>
+
+                <div class="bg-blue-50 p-6 rounded-[28px]">
+                    <label class="text-[10px] font-black text-blue-400 uppercase">Amount (HKD)</label>
+                    <input type="number" id="inv-amt" placeholder="0.00" class="bg-transparent w-full text-4xl font-black text-blue-600 outline-none">
+                </div>
+
+                <button onclick="App.postInvoice('${invNo}')" class="w-full grad-blue text-white font-black py-5 rounded-[24px] shadow-lg">
+                    POST INVOICE
+                </button>
+            </div>
+        </div>
+    `;
+},
+
+// Yeh function bhi paste karein (App object ke andar hi)
+postInvoice(invNo) {
+    const amt = parseFloat(document.getElementById('inv-amt').value);
+    if(!amt) return alert("Amount likho bhai!");
+
+    this.state.transactions.push({
+        id: invNo,
+        partyId: document.getElementById('inv-party-id').value,
+        amount: amt,
+        type: 'SALE',
+        date: '25 Apr'
+    });
+    this.saveData();
+    this.navigate('dashboard', 'Dashboard');
+}
         };
 
         // Start the Engine
