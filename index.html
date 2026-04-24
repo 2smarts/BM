@@ -1,1 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2Smart BM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: -apple-system, sans-serif; background: #f2f2f7; }
+        .ios-card { background: white; border-radius: 15px; padding: 15px; shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body class="p-4">
+    <div class="max-w-md mx-auto space-y-6">
+        <header class="py-4">
+            <h1 class="text-3xl font-black text-gray-900">2Smart BM</h1>
+            <p class="text-gray-500 font-medium text-sm uppercase tracking-widest">Business Manager</p>
+        </header>
 
+        <div class="grid grid-cols-2 gap-4">
+            <div class="ios-card bg-blue-600 text-white flex flex-col items-center justify-center space-y-2 py-8">
+                <span class="text-3xl">📄</span>
+                <span class="font-bold text-xs">INVOICE</span>
+            </div>
+            <div class="ios-card bg-purple-600 text-white flex flex-col items-center justify-center space-y-2 py-8">
+                <span class="text-3xl">💰</span>
+                <span class="font-bold text-xs">VOUCHERS</span>
+            </div>
+        </div>
+
+        <div class="ios-card bg-white border border-gray-100">
+            <h3 class="text-xs font-bold text-gray-400 mb-4 uppercase tracking-wider">Quick Actions</h3>
+            <div class="space-y-4">
+                <div class="flex items-center justify-between border-b pb-3 text-sm font-medium">
+                    <span>Add New Customer</span>
+                    <span class="text-blue-600">→</span>
+                </div>
+                <div class="flex items-center justify-between border-b pb-3 text-sm font-medium">
+                    <span>View Today's Sales</span>
+                    <span class="text-blue-600">→</span>
+                </div>
+                <div class="flex items-center justify-between text-sm font-medium">
+                    <span>Account Settings</span>
+                    <span class="text-blue-600">→</span>
+                </div>
+            </div>
+        </div>
+
+        <p class="text-center text-[10px] text-gray-400 mt-10">Software is ready to be customized.</p>
+    </div>
+</body>
+</html>
