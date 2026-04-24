@@ -2,253 +2,122 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2Smart Management System</title>
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2Smart Pvt Limited</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
-    
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f2f2f7; }
-        .ios-card { background: white; border-radius: 15px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); padding: 15px; margin-bottom: 15px; }
-        input, select { border: 1px solid #ddd; padding: 8px; border-radius: 8px; margin-bottom: 10px; width: 100%; }
-        button { cursor: pointer; transition: opacity 0.2s; }
-        button:active { opacity: 0.6; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #eee; padding: 8px; text-align: left; font-size: 12px; }
+        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-radius: 20px; }
+        .gradient-invoice { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .gradient-voucher { background: linear-gradient(135deg, #10b981, #059669); }
+        .gradient-accounts { background: linear-gradient(135deg, #f97316, #ea580c); }
+        .gradient-reports { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+        body { background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     </style>
 </head>
-<body>
-    <div id="root"></div>
+<body class="p-4">
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
+    <div id="dashboard" class="max-w-md mx-auto">
+        <header class="flex justify-between items-center mb-8">
+            <div>
+                <span class="text-blue-500 text-xs font-black tracking-widest uppercase">Management System</span>
+                <h1 class="text-2xl font-black text-gray-900 leading-tight">2SMART PVT LIMITED</h1>
+            </div>
+            <button class="bg-gray-200 p-3 rounded-2xl shadow-inner">⚙️</button>
+        </header>
 
-        // --- 1. CORE LOGIC & CLASSES ---
-        class AppState {
-            constructor() {
-                this.companyName = localStorage.getItem("companyName") || "2SMARTS PVT LIMITED";
-                this.companyAddress = "Hong Kong Office";
-                this.companyPhone = "+852 XXXX XXXX";
-                this.companyEmail = "info@2smart.com";
-                this.bankName = "HSBC";
-                this.bankAccNo = "123-456789-001";
-                this.bankSwift = "HSBCHKHH";
-                
-                const savedAccounts = localStorage.getItem("stored_accounts_data");
-                this.accounts = savedAccounts ? JSON.parse(savedAccounts) : [
-                    { id: '1', name: 'CASH IN HAND', type: 'Cash' }
-                ];
-
-                const savedTxs = localStorage.getItem("stored_transactions_data");
-                this.transactions = savedTxs ? JSON.parse(savedTxs) : [];
-            }
-        }
-
-        // --- 2. COMPONENTS ---
-
-        // PDF Generator Helper
-        const renderPDF = (invoice, state) => {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.setFontSize(18);
-            doc.text(state.companyName, 20, 20);
-            doc.setFontSize(10);
-            doc.text(state.companyAddress, 20, 30);
+        <p class="text-gray-500 font-bold mb-4 uppercase text-sm tracking-tighter">Business Operations</p>
+        
+        <div class="grid grid-cols-2 gap-4">
+            <div onclick="showView('invoice')" class="gradient-invoice p-6 rounded-[30px] shadow-lg text-white cursor-pointer active:scale-95 transition-transform">
+                <div class="bg-white/20 w-10 h-10 rounded-full flex items-center justify-center mb-4">📄</div>
+                <h2 class="font-bold text-lg leading-tight">INVOICE</h2>
+                <p class="text-[10px] opacity-80">Sales & Purchase</p>
+            </div>
             
-            doc.autoTable({
-                head: [["Description", "Qty", "Rate", "Total"]],
-                body: invoice.invoiceItems.map(item => [
-                    item.particular, item.units, item.rate.toFixed(2), (item.units * item.rate).toFixed(2)
-                ]),
-                startY: 50
-            });
-            doc.text(`Total Due: HKD ${invoice.amount.toFixed(2)}`, 140, doc.lastAutoTable.finalY + 10);
-            doc.save(`${invoice.voucherNo}.pdf`);
-        };
+            <div onclick="showView('voucher')" class="gradient-voucher p-6 rounded-[30px] shadow-lg text-white cursor-pointer active:scale-95 transition-transform">
+                <div class="bg-white/20 w-10 h-10 rounded-full flex items-center justify-center mb-4">💰</div>
+                <h2 class="font-bold text-lg leading-tight">VOUCHER</h2>
+                <p class="text-[10px] opacity-80">Cash Flow</p>
+            </div>
 
-        function AccountDetail({ account, transactions, onBack }) {
-            const entries = transactions
-                .filter(tx => tx.debitAccountId === account.id || tx.creditAccountId === account.id)
-                .sort((a, b) => new Date(a.date) - new Date(b.date));
+            <div onclick="showView('accounts')" class="gradient-accounts p-6 rounded-[30px] shadow-lg text-white cursor-pointer active:scale-95 transition-transform">
+                <div class="bg-white/20 w-10 h-10 rounded-full flex items-center justify-center mb-4">📇</div>
+                <h2 class="font-bold text-lg leading-tight">ACCOUNTS</h2>
+                <p class="text-[10px] opacity-80">Party Balance</p>
+            </div>
 
-            let currentBal = 0;
-            const rows = entries.map(tx => {
-                const isDebit = tx.debitAccountId === account.id;
-                currentBal += isDebit ? tx.amount : -tx.amount;
-                return { ...tx, isDebit, runningBal: currentBal };
-            });
+            <div onclick="showView('reports')" class="gradient-reports p-6 rounded-[30px] shadow-lg text-white cursor-pointer active:scale-95 transition-transform">
+                <div class="bg-white/20 w-10 h-10 rounded-full flex items-center justify-center mb-4">📊</div>
+                <h2 class="font-bold text-lg leading-tight">REPORTS</h2>
+                <p class="text-[10px] opacity-80">Audit History</p>
+            </div>
+        </div>
+    </div>
 
-            return (
-                <div className="p-4">
-                    <button onClick={onBack} className="text-blue-500 mb-4">❮ Back</button>
-                    <div className="ios-card bg-blue-600 text-white">
-                        <h2 className="text-xl font-bold">{account.name}</h2>
-                        <p className="opacity-70">{account.type}</p>
-                        <h3 className="text-2xl font-black mt-2">Bal: HKD {currentBal.toFixed(2)}</h3>
-                    </div>
-                    <div className="ios-card overflow-x-auto">
-                        <table>
-                            <thead>
-                                <tr><th>Date</th><th>Narration</th><th>Amt</th><th>Bal</th></tr>
-                            </thead>
-                            <tbody>
-                                {rows.map(r => (
-                                    <tr key={r.id}>
-                                        <td>{new Date(r.date).toLocaleDateString()}</td>
-                                        <td>{r.voucherNo}</td>
-                                        <td className={r.isDebit ? "text-green-600" : "text-red-600"}>{r.amount.toFixed(2)}</td>
-                                        <td>{r.runningBal.toFixed(2)}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+    <div id="invoice" class="hidden max-w-md mx-auto">
+        <button onclick="showView('dashboard')" class="text-blue-600 font-bold mb-4">← Back</button>
+        <div class="bg-white p-4 rounded-3xl shadow-sm border">
+            <h2 class="text-xl font-black mb-4">Invoice Entry</h2>
+            <div class="flex gap-2 mb-4">
+                <button class="bg-blue-600 text-white flex-1 py-2 rounded-lg font-bold">SALE</button>
+                <button class="bg-gray-200 flex-1 py-2 rounded-lg font-bold">PURCHASE</button>
+            </div>
+            <input type="text" id="inv_party" placeholder="Party Name" class="w-full p-3 bg-gray-100 rounded-xl mb-3 outline-none">
+            <input type="number" id="inv_amount" placeholder="Total Amount" class="w-full p-4 text-2xl font-bold bg-blue-50 text-blue-600 rounded-xl mb-4">
+            <button onclick="saveTransaction('SALE')" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg">POST INVOICE</button>
+        </div>
+    </div>
+
+    <div id="accounts" class="hidden max-w-md mx-auto">
+        <button onclick="showView('dashboard')" class="text-blue-600 font-bold mb-4">← Back</button>
+        <div class="bg-white p-4 rounded-3xl shadow-sm mb-4">
+            <h2 class="text-xl font-black">Account Manager</h2>
+            <div id="account-list" class="mt-4 space-y-3">
                 </div>
-            );
+        </div>
+    </div>
+
+    <script>
+        // --- DATA LOGIC ---
+        let state = JSON.parse(localStorage.getItem('2smart_data')) || { transactions: [], accounts: ['ASIF AK', 'HASAN DND', 'TMG'] };
+
+        function showView(viewId) {
+            document.querySelectorAll('body > div').forEach(div => div.classList.add('hidden'));
+            document.getElementById(viewId).classList.remove('hidden');
+            if(viewId === 'accounts') renderAccounts();
         }
 
-        function InvoiceView({ state, onBack }) {
-            const [invoiceType, setInvoiceType] = useState("SALE");
-            const [date, setDate] = useState(new Date());
-            const [invoiceNo, setInvoiceNo] = useState(`INV-${Date.now()}`);
-            const [selectedPartyId, setSelectedPartyId] = useState(state.accounts[0]?.id);
-            const [items, setItems] = useState([{ id: crypto.randomUUID(), particular: "", units: 0, rate: 0 }]);
+        function saveTransaction(type) {
+            const party = document.getElementById('inv_party').value;
+            const amount = document.getElementById('inv_amount').value;
+            if(!party || !amount) return alert('Pora data bharein');
 
-            const grandTotal = items.reduce((sum, item) => sum + item.units * item.rate, 0);
-
-            const postInvoice = () => {
-                const party = state.accounts.find(a => a.id === selectedPartyId);
-                const newTx = {
-                    id: crypto.randomUUID(),
-                    voucherNo: invoiceNo,
-                    date: date.toISOString(),
-                    debitAccountId: invoiceType === "SALE" ? party.id : "PURCHASE-ID",
-                    creditAccountId: invoiceType === "SALE" ? "SALE-ID" : party.id,
-                    debitAccountName: party.name,
-                    amount: grandTotal,
-                    narration: invoiceType,
-                    isInvoice: true,
-                    invoiceItems: items
-                };
-                state.transactions.push(newTx);
-                localStorage.setItem("stored_transactions_data", JSON.stringify(state.transactions));
-                alert("Posted!");
-                onBack();
+            const newTx = {
+                id: Date.now(),
+                date: new Date().toLocaleDateString(),
+                party: party,
+                amount: parseFloat(amount),
+                type: type
             };
 
-            return (
-                <div className="p-4">
-                    <button onClick={onBack} className="text-blue-500 mb-4">❮ Cancel</button>
-                    <div className="ios-card">
-                        <h2 className="font-bold mb-4">{invoiceType} INVOICE</h2>
-                        <select value={selectedPartyId} onChange={e => setSelectedPartyId(e.target.value)}>
-                            {state.accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
-                        </select>
-                        <input type="text" value={invoiceNo} onChange={e => setInvoiceNo(e.target.value)} placeholder="Invoice No" />
-                    </div>
-                    {items.map((item, idx) => (
-                        <div key={item.id} className="ios-card flex gap-2">
-                            <input className="flex-1" placeholder="Item" onChange={e => {
-                                const newItems = [...items]; newItems[idx].particular = e.target.value; setItems(newItems);
-                            }} />
-                            <input className="w-16" type="number" placeholder="Qty" onChange={e => {
-                                const newItems = [...items]; newItems[idx].units = Number(e.target.value); setItems(newItems);
-                            }} />
-                            <input className="w-20" type="number" placeholder="Rate" onChange={e => {
-                                const newItems = [...items]; newItems[idx].rate = Number(e.target.value); setItems(newItems);
-                            }} />
-                        </div>
-                    ))}
-                    <button className="w-full p-3 bg-gray-200 rounded-xl mb-4" onClick={() => setItems([...items, { id: crypto.randomUUID(), particular: "", units: 0, rate: 0 }])}>+ Add Item</button>
-                    <div className="bg-blue-600 text-white p-4 rounded-xl flex justify-between items-center">
-                        <span>Total</span>
-                        <span className="text-xl font-bold">{grandTotal.toFixed(2)}</span>
-                    </div>
-                    <button className="w-full bg-blue-600 text-white p-4 rounded-xl mt-4 font-bold" onClick={postInvoice}>SAVE & POST</button>
-                </div>
-            );
+            state.transactions.push(newTx);
+            localStorage.setItem('2smart_data', JSON.stringify(state));
+            alert('Entry Saved!');
+            showView('dashboard');
         }
 
-        function AccountManager({ state, onBack }) {
-            const [accounts, setAccounts] = useState(state.accounts);
-            const [name, setName] = useState("");
-
-            const addAccount = () => {
-                const newAcc = { id: crypto.randomUUID(), name: name.toUpperCase(), type: "Receivable" };
-                const updated = [...accounts, newAcc];
-                setAccounts(updated);
-                state.accounts = updated;
-                localStorage.setItem("stored_accounts_data", JSON.stringify(updated));
-                setName("");
-            };
-
-            return (
-                <div className="p-4">
-                    <button onClick={onBack} className="text-blue-500 mb-4">❮ Back</button>
-                    <div className="ios-card">
-                        <input value={name} onChange={e => setName(e.target.value)} placeholder="Account Name" />
-                        <button className="w-full bg-orange-500 text-white p-2 rounded" onClick={addAccount}>Add Party</button>
+        function renderAccounts() {
+            const list = document.getElementById('account-list');
+            list.innerHTML = state.accounts.map(acc => `
+                <div class="p-4 bg-gray-50 rounded-2xl flex justify-between items-center border">
+                    <div>
+                        <p class="font-black text-gray-800">${acc}</p>
+                        <p class="text-xs text-blue-500 font-bold uppercase">Receivable</p>
                     </div>
-                    <div className="space-y-2">
-                        {accounts.map(acc => (
-                            <div key={acc.id} className="ios-card flex justify-between">
-                                <span>{acc.name}</span>
-                                <span className="text-gray-400 text-xs">{acc.type}</span>
-                            </div>
-                        ))}
-                    </div>
+                    <span class="text-blue-600 font-black">Details →</span>
                 </div>
-            );
+            `).join('');
         }
-
-        function App() {
-            const [state] = useState(new AppState());
-            const [view, setView] = useState("dashboard");
-            const [selectedAcc, setSelectedAcc] = useState(null);
-
-            const DashboardCard = ({ title, desc, color, onClick }) => (
-                <div onClick={onClick} className={`p-6 rounded-3xl text-white shadow-lg cursor-pointer active:scale-95 transition-transform`} style={{ background: color }}>
-                    <h3 className="font-bold text-lg">{title}</h3>
-                    <p className="text-xs opacity-80">{desc}</p>
-                </div>
-            );
-
-            if (selectedAcc) return <AccountDetail account={selectedAcc} transactions={state.transactions} onBack={() => setSelectedAcc(null)} />;
-            if (view === "invoice") return <InvoiceView state={state} onBack={() => setView("dashboard")} />;
-            if (view === "accounts") return <AccountManager state={state} onBack={() => setView("dashboard")} />;
-
-            return (
-                <div>
-                    <header className="p-6">
-                        <span className="text-[10px] font-bold text-blue-600">MANAGEMENT SYSTEM</span>
-                        <h2 className="text-2xl font-black">{state.companyName}</h2>
-                    </header>
-                    <div className="grid grid-cols-2 gap-4 p-4">
-                        <DashboardCard title="INVOICE" desc="Sales & Purchase" color="#007AFF" onClick={() => setView("invoice")} />
-                        <DashboardCard title="VOUCHER" desc="Cash Flow" color="#34C759" onClick={() => setView("dashboard")} />
-                        <DashboardCard title="ACCOUNTS" desc="Party Balance" color="#FF9500" onClick={() => setView("accounts")} />
-                        <DashboardCard title="REPORTS" desc="Audit History" color="#5856D6" onClick={() => setView("dashboard")} />
-                    </div>
-                    
-                    <div className="p-4">
-                        <h4 className="text-gray-400 text-xs font-bold mb-2">RECENT PARTIES</h4>
-                        {state.accounts.slice(0, 5).map(acc => (
-                            <div key={acc.id} className="ios-card flex justify-between items-center" onClick={() => setSelectedAcc(acc)}>
-                                <span>{acc.name}</span>
-                                <span className="text-blue-500 font-bold">View Ledger ❯</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            );
-        }
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
     </script>
 </body>
 </html>
