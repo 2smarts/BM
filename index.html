@@ -101,39 +101,153 @@
             },
 
             renderInvoice() {
-    const container = document.getElementById('screen-container');
-    const invCount = this.state.transactions.filter(t => t.type === 'SALE' || t.type === 'PURCHASE').length + 1;
-    const invNo = `SIN-${String(invCount).padStart(5, '0')}`;
+                const container = document.getElementById('screen-container');
+                
+                // State for current invoice items (Image 4930 logic)
+                if(!this.state.currentEntry) {
+                    this.state.currentEntry = {
+                        id: `SIN-${String(this.state.transactions.length + 1).padStart(5, '0')}`,
+                        date: new Date().toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'}),
+                        partyId: this.state.accounts[0].id,
+                        type: 'SALE',
+                        items: [{ desc: '', qty: 0, rate: 0, total: 0 }]
+                    };
+                }
 
-    container.innerHTML = `
-        <div class="space-y-6">
-            <button onclick="App.navigate('dashboard', 'Dashboard')" class="text-blue-600 font-bold">← Back</button>
-            
-            <div class="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100 space-y-5">
-                <div class="flex justify-between items-center border-b pb-4">
-                    <h2 class="text-xl font-black text-blue-600">${invNo}</h2>
-                    <p class="font-bold text-gray-400">${new Date().toLocaleDateString('en-GB')}</p>
-                </div>
+                const entry = this.state.currentEntry;
 
-                <div>
-                    <label class="text-[10px] font-black text-gray-400 uppercase ml-2">Party Name</label>
-                    <select id="inv-party-id" class="w-full p-4 bg-gray-50 rounded-2xl font-bold">
-                        ${this.state.accounts.map(acc => `<option value="${acc.id}">${acc.name}</option>`).join('')}
-                    </select>
-                </div>
+                container.innerHTML = `
+                    <div class="fade-in pb-24">
+                        <div class="flex justify-between items-center mb-6">
+                            <button onclick="App.navigate('dashboard', 'Dashboard')" class="text-blue-600 font-bold flex items-center">
+                                <span class="text-2xl mr-1">‹</span> Back
+                            </button>
+                            <div class="flex bg-gray-200 p-1 rounded-xl">
+                                <button onclick="App.setInvType('SALE')" class="${entry.type === 'SALE' ? 'bg-blue-600 text-white' : 'text-gray-500'} px-6 py-2 rounded-lg font-black text-xs transition-all">SALE</button>
+                                <button onclick="App.setInvType('PURCHASE')" class="${entry.type === 'PURCHASE' ? 'bg-blue-600 text-white' : 'text-gray-500'} px-6 py-2 rounded-lg font-black text-xs transition-all ml-1">PURCHASE</button>
+                            </div>
+                        </div>
 
-                <div class="bg-blue-50 p-6 rounded-[28px]">
-                    <label class="text-[10px] font-black text-blue-400 uppercase">Amount (HKD)</label>
-                    <input type="number" id="inv-amt" placeholder="0.00" class="bg-transparent w-full text-4xl font-black text-blue-600 outline-none">
-                </div>
+                        <div class="flex justify-between items-end mb-4">
+                            <h2 class="text-blue-600 text-xl font-black">${entry.id}</h2>
+                            <div class="bg-gray-100 px-4 py-2 rounded-xl font-bold text-gray-700">${entry.date}</div>
+                        </div>
 
-                <button onclick="App.postInvoice('${invNo}')" class="w-full grad-blue text-white font-black py-5 rounded-[24px] shadow-lg">
-                    POST INVOICE
-                </button>
-            </div>
-        </div>
-    `;
-},
+                        <div class="mb-6">
+                            <select id="inv-party" onchange="App.state.currentEntry.partyId = this.value" class="w-full p-4 bg-blue-50 text-blue-800 rounded-xl font-black border-none appearance-none shadow-sm">
+                                ${this.state.accounts.map(acc => `<option value="${acc.id}" ${acc.id === entry.partyId ? 'selected' : ''}>${acc.id} | ${acc.name}</option>`).join('')}
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-12 gap-2 px-2 mb-2 text-[10px] font-black text-gray-400 uppercase">
+                            <div class="col-span-5">Item</div>
+                            <div class="col-span-2 text-right">Qty</div>
+                            <div class="col-span-2 text-right">Rate</div>
+                            <div class="col-span-3 text-right">Total</div>
+                        </div>
+
+                        <div id="item-rows" class="space-y-3 mb-6">
+                            ${entry.items.map((item, index) => `
+                                <div class="grid grid-cols-12 gap-2 items-center bg-white p-3 rounded-xl shadow-sm">
+                                    <input type="text" value="${item.desc}" oninput="App.updateItem(${index}, 'desc', this.value)" placeholder="Model..." class="col-span-5 font-bold text-sm outline-none">
+                                    <input type="number" value="${item.qty}" oninput="App.updateItem(${index}, 'qty', this.value)" class="col-span-2 text-right font-bold text-sm outline-none bg-gray-50 rounded p-1">
+                                    <input type="number" value="${item.rate}" oninput="App.updateItem(${index}, 'rate', this.value)" class="col-span-2 text-right font-bold text-sm outline-none bg-gray-50 rounded p-1">
+                                    <div class="col-span-3 text-right font-black text-blue-600 text-sm">${(item.qty * item.rate).toLocaleString()}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <div class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md p-4 border-t border-gray-100 flex items-center justify-between gap-2">
+                             <div class="flex gap-2">
+                                <button class="bg-gray-200 w-10 h-10 rounded-xl flex items-center justify-center font-bold">‹</button>
+                                <button class="bg-gray-200 w-10 h-10 rounded-xl flex items-center justify-center font-bold">›</button>
+                             </div>
+                             <button onclick="App.addItemRow()" class="bg-gray-100 w-10 h-10 rounded-xl text-blue-600 text-2xl font-bold">+</button>
+                             
+                             <div class="flex-1 text-right pr-2">
+                                <p class="text-[10px] font-bold text-gray-400 uppercase">Total Amount</p>
+                                <p class="text-lg font-black">${this.calculateTotal().toLocaleString()}</p>
+                             </div>
+
+                             <button onclick="App.saveAndPrint()" class="bg-green-500 text-white px-8 py-3 rounded-2xl font-black shadow-lg shadow-green-100 active:scale-95 transition-all">UPDATE</button>
+                        </div>
+                    </div>
+                `;
+            },
+
+            // --- HELPER LOGIC FOR PRO VIEW ---
+            updateItem(index, field, value) {
+                const item = this.state.currentEntry.items[index];
+                item[field] = field === 'desc' ? value : parseFloat(value) || 0;
+                item.total = item.qty * item.rate;
+                this.renderInvoice(); // Refresh view
+            },
+
+            addItemRow() {
+                this.state.currentEntry.items.push({ desc: '', qty: 0, rate: 0, total: 0 });
+                this.renderInvoice();
+            },
+
+            calculateTotal() {
+                return this.state.currentEntry.items.reduce((sum, item) => sum + (item.qty * item.rate), 0);
+            },
+
+            saveAndPrint() {
+                const entry = this.state.currentEntry;
+                const total = this.calculateTotal();
+                if(total <= 0) return alert("Pehle items to daalein!");
+
+                // Save to transactions
+                this.state.transactions.push({
+                    ...entry,
+                    amount: total,
+                    timestamp: Date.now()
+                });
+                
+                this.saveData();
+                alert("Invoice Saved Successfully!");
+                this.generatePDF(entry); // PDF Trigger
+            },
+
+            generatePDF(entry) {
+                // Image 4931 style PDF (Simple Version)
+                const win = window.open('', '_blank');
+                win.document.write(`
+                    <html>
+                    <head><title>${entry.id}</title></head>
+                    <body style="font-family: sans-serif; padding: 40px; color: #333;">
+                        <h1 style="color: #007AFF;">2SMART PVT LIMITED</h1>
+                        <p>Flat C 11/F Hang Wan Building, Hong Kong</p>
+                        <hr>
+                        <div style="display: flex; justify-content: space-between;">
+                            <h2>INVOICE: ${entry.id}</h2>
+                            <h3>DATE: ${entry.date}</h3>
+                        </div>
+                        <p><strong>BILL TO:</strong> ${entry.partyId}</p>
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                            <tr style="background: #f0f0f0; text-align: left;">
+                                <th style="padding: 10px;">Description</th>
+                                <th style="padding: 10px;">Qty</th>
+                                <th style="padding: 10px;">Rate</th>
+                                <th style="padding: 10px;">Total</th>
+                            </tr>
+                            ${entry.items.map(i => `
+                                <tr>
+                                    <td style="padding: 10px; border-bottom: 1px solid #eee;">${i.desc}</td>
+                                    <td style="padding: 10px; border-bottom: 1px solid #eee;">${i.qty}</td>
+                                    <td style="padding: 10px; border-bottom: 1px solid #eee;">${i.rate}</td>
+                                    <td style="padding: 10px; border-bottom: 1px solid #eee;">${i.total}</td>
+                                </tr>
+                            `).join('')}
+                        </table>
+                        <h2 style="text-align: right; color: #007AFF; margin-top: 30px;">BALANCE DUE HKD $${this.calculateTotal().toLocaleString()}</h2>
+                    </body>
+                    </html>
+                `);
+                win.print();
+                this.state.currentEntry = null; // Reset for next
+                this.navigate('dashboard', 'Dashboard');
+            }
 
 // Yeh function bhi paste karein (App object ke andar hi)
 postInvoice(invNo) {
