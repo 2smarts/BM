@@ -1,183 +1,565 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>2SMART PVT LIMITED - Web App</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: Arial, sans-serif; margin:0; background:#f5f5f5; }
-    header { background:#007bff; color:white; padding:15px; text-align:center; }
-    nav { display:flex; justify-content:space-around; background:#eee; padding:10px; }
-    nav button { padding:10px 20px; border:none; border-radius:5px; cursor:pointer; }
-    section { padding:20px; display:none; }
-    section.active { display:block; }
-    .card { background:white; padding:15px; margin:10px 0; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
-    table { width:100%; border-collapse:collapse; margin-top:10px; }
-    th, td { border:1px solid #ccc; padding:8px; text-align:center; }
-    th { background:#007bff; color:white; }
-    .btn { background:#007bff; color:white; padding:8px 12px; border:none; border-radius:5px; cursor:pointer; }
-  </style>
-</head>
-<body>
+localStorage.setItem("companyName", "2SMARTS PVT LIMITED");
+const companyName = localStorage.getItem("companyName");
+function saveAccounts(accounts) {
+  localStorage.setItem("stored_accounts_data", JSON.stringify(accounts));
+}
 
-<header>
-  <h1>2SMART PVT LIMITED</h1>
-  <p>Business Management System</p>
-</header>
-
-<nav>
-  <button onclick="showSection('dashboard')">Dashboard</button>
-  <button onclick="showSection('invoice')">Invoice</button>
-  <button onclick="showSection('voucher')">Voucher</button>
-  <button onclick="showSection('accounts')">Accounts</button>
-  <button onclick="showSection('reports')">Reports</button>
-</nav>
-
-<!-- Dashboard -->
-<section id="dashboard" class="active">
-  <h2>Dashboard</h2>
-  <div class="card">Welcome to your business management system. Use the navigation above.</div>
-</section>
-
-<!-- Invoice -->
-<section id="invoice">
-  <h2>Invoice</h2>
-  <form onsubmit="saveInvoice(event)">
-    <input type="text" id="invoiceNo" placeholder="Invoice No" required><br><br>
-    <input type="date" id="invoiceDate" required><br><br>
-    <input type="text" id="partyName" placeholder="Party Name" required><br><br>
-    <table>
-      <thead><tr><th>Item</th><th>Qty</th><th>Rate</th><th>Total</th></tr></thead>
-      <tbody id="invoiceItems"></tbody>
-    </table>
-    <button type="button" class="btn" onclick="addInvoiceRow()">Add Row</button><br><br>
-    <h3 id="grandTotal">Grand Total: 0</h3>
-    <button class="btn" type="submit">Save Invoice</button>
-  </form>
-  <h3>Saved Invoices</h3>
-  <div id="invoiceList"></div>
-</section>
-
-<!-- Voucher -->
-<section id="voucher">
-  <h2>Voucher</h2>
-  <form onsubmit="saveVoucher(event)">
-    <input type="text" id="voucherNo" placeholder="Voucher No" required><br><br>
-    <input type="date" id="voucherDate" required><br><br>
-    <input type="text" id="voucherAccount" placeholder="Account" required><br><br>
-    <input type="number" id="voucherAmount" placeholder="Amount" required><br><br>
-    <input type="text" id="voucherNarration" placeholder="Narration"><br><br>
-    <button class="btn" type="submit">Save Voucher</button>
-  </form>
-  <h3>Saved Vouchers</h3>
-  <div id="voucherList"></div>
-</section>
-
-<!-- Accounts -->
-<section id="accounts">
-  <h2>Accounts</h2>
-  <form onsubmit="saveAccount(event)">
-    <input type="text" id="accountName" placeholder="Account Name" required><br><br>
-    <select id="accountType">
-      <option>Receivable</option>
-      <option>Payable</option>
-      <option>Cash</option>
-      <option>Bank</option>
-      <option>Expense</option>
-    </select><br><br>
-    <button class="btn" type="submit">Save Account</button>
-  </form>
-  <h3>Saved Accounts</h3>
-  <div id="accountList"></div>
-</section>
-
-<!-- Reports -->
-<section id="reports">
-  <h2>Reports</h2>
-  <div id="reportList"></div>
-</section>
-
-<script>
-  function showSection(id) {
-    document.querySelectorAll("section").forEach(sec => sec.classList.remove("active"));
-    document.getElementById(id).classList.add("active");
+function loadAccounts() {
+  const data = localStorage.getItem("stored_accounts_data");
+  return data ? JSON.parse(data) : [];
+}
+class Account {
+  constructor(name, type) {
+    this.id = crypto.randomUUID(); // unique ID
+    this.name = name;
+    this.type = type;
   }
-
-  // LocalStorage helpers
-  function getData(key) { return JSON.parse(localStorage.getItem(key) || "[]"); }
-  function setData(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
-
-  // Invoice
-  function addInvoiceRow() {
-    const tbody = document.getElementById("invoiceItems");
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td><input type="text" placeholder="Item"></td>
-      <td><input type="number" value="0" onchange="updateTotal()"></td>
-      <td><input type="number" value="0" onchange="updateTotal()"></td>
-      <td class="rowTotal">0</td>
-    `;
-    tbody.appendChild(row);
+}
+class InvoiceItemRow {
+  constructor(particular, units, rate) {
+    this.id = crypto.randomUUID();
+    this.particular = particular;
+    this.units = units;
+    this.rate = rate;
   }
-  function updateTotal() {
-    let total = 0;
-    document.querySelectorAll("#invoiceItems tr").forEach(tr => {
-      const qty = parseFloat(tr.children[1].children[0].value) || 0;
-      const rate = parseFloat(tr.children[2].children[0].value) || 0;
-      const rowTotal = qty * rate;
-      tr.children[3].textContent = rowTotal.toFixed(2);
-      total += rowTotal;
+  get total() {
+    return this.units * this.rate;
+  }
+}
+class Transaction {
+  constructor(voucherNo, date, debitAccountId, creditAccountId, debitAccountName, creditAccountName, amount, narration, type="Pay In", isInvoice=false, invoiceItems=[]) {
+    this.id = crypto.randomUUID();
+    this.voucherNo = voucherNo;
+    this.date = date; // store as Date object
+    this.debitAccountId = debitAccountId;
+    this.creditAccountId = creditAccountId;
+    this.debitAccountName = debitAccountName;
+    this.creditAccountName = creditAccountName;
+    this.amount = amount;
+    this.narration = narration;
+    this.type = type;
+    this.isInvoice = isInvoice;
+    this.invoiceItems = invoiceItems;
+  }
+}
+function AccountDetail({ account, transactions }) {
+  const entries = transactions
+    .filter(tx => tx.debitAccountId === account.id || tx.creditAccountId === account.id)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  const calculateRunningBalances = () => {
+    let balances = [];
+    let current = 0;
+    entries.forEach(tx => {
+      const isDebit = tx.debitAccountId === account.id;
+      current += isDebit ? tx.amount : -tx.amount;
+      balances.push(current);
     });
-    document.getElementById("grandTotal").textContent = "Grand Total: " + total.toFixed(2);
-  }
-  function saveInvoice(e) {
-    e.preventDefault();
-    const invoices = getData("invoices");
-    const items = [];
-    document.querySelectorAll("#invoiceItems tr").forEach(tr => {
-      items.push({
-        item: tr.children[0].children[0].value,
-        qty: tr.children[1].children[0].value,
-        rate: tr.children[2].children[0].value,
-        total: tr.children[3].textContent
-      });
-    });
-    invoices.push({
-      no: document.getElementById("invoiceNo").value,
-      date: document.getElementById("invoiceDate").value,
-      party: document.getElementById("partyName").value,
-      items: items,
-      amount: document.getElementById("grandTotal").textContent
-    });
-    setData("invoices", invoices);
-    renderInvoices();
-    e.target.reset();
-    document.getElementById("invoiceItems").innerHTML = "";
-    document.getElementById("grandTotal").textContent = "Grand Total: 0";
-  }
-  function renderInvoices() {
-    const invoices = getData("invoices");
-    document.getElementById("invoiceList").innerHTML = invoices.map(i =>
-      `<div class="card">${i.no} | ${i.date} | ${i.party} | ${i.amount}</div>`
-    ).join("");
+    return balances;
+  };
+
+  const finalBalance = calculateRunningBalances().slice(-1)[0] || 0;
+
+  return (
+    <div>
+      <header>
+        <h2>{account.name}</h2>
+        <p>{account.type}</p>
+        <h3>Current Balance: HKD {finalBalance.toFixed(2)}</h3>
+      </header>
+
+      <div className="table-header">
+        <span>Date</span>
+        <span>Particulars</span>
+        <span>Amount</span>
+        <span>Balance</span>
+      </div>
+
+      {entries.map((tx, i) => {
+        const isDebit = tx.debitAccountId === account.id;
+        const balances = calculateRunningBalances();
+        return (
+          <div key={tx.id} className="row">
+            <span>{new Date(tx.date).toLocaleDateString()}</span>
+            <span>{tx.voucherNo} - {tx.narration}</span>
+            <span style={{color: isDebit ? "green" : "red"}}>
+              {tx.amount.toFixed(2)}
+            </span>
+            <span>{balances[i].toFixed(2)}</span>
+          </div>
+        );
+      })}
+
+      <button onClick={() => renderPDF(entries, account)}>Download Ledger PDF</button>
+    </div>
+  );
+}
+import { useState } from "react";
+import AccountDetail from "./AccountDetail";
+
+function AccountLedger({ accounts, transactions }) {
+  const [searchText, setSearchText] = useState("");
+  const [selectedAccount, setSelectedAccount] = useState(null);
+
+  const filteredAccounts = accounts.filter(acc =>
+    acc.name.toLowerCase().includes(searchText.toLowerCase())
+  );
+
+  if (selectedAccount) {
+    return <AccountDetail account={selectedAccount} transactions={transactions} />;
   }
 
-  // Voucher
-  function saveVoucher(e) {
-    e.preventDefault();
-    const vouchers = getData("vouchers");
-    vouchers.push({
-      no: document.getElementById("voucherNo").value,
-      date: document.getElementById("voucherDate").value,
-      account: document.getElementById("voucherAccount").value,
-      amount: document.getElementById("voucherAmount").value,
-      narration: document.getElementById("voucherNarration").value
+  return (
+    <div>
+      <h2>Accounts</h2>
+      <input
+        type="text"
+        placeholder="Search account name..."
+        value={searchText}
+        onChange={e => setSearchText(e.target.value)}
+        style={{ padding: "10px", borderRadius: "8px", width: "100%" }}
+      />
+
+      <ul>
+        {filteredAccounts.map(acc => (
+          <li
+            key={acc.id}
+            style={{ padding: "8px", cursor: "pointer", borderBottom: "1px solid #ccc" }}
+            onClick={() => setSelectedAccount(acc)}
+          >
+            <strong>{acc.name}</strong>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default AccountLedger;
+import { useState } from "react";
+
+function AccountManager({ accounts, setAccounts, transactions }) {
+  const [accountName, setAccountName] = useState("");
+  const [selectedType, setSelectedType] = useState("Receivable");
+  const [searchText, setSearchText] = useState("");
+  const [editingAccount, setEditingAccount] = useState(null);
+
+  const mainCategories = ["Receivable", "Payable", "Cash", "Bank", "Expense"];
+
+  const filteredAccounts = accounts.filter(acc =>
+    acc.name.toLowerCase().includes(searchText.toLowerCase())
+  );
+
+  const addAccount = () => {
+    if (!accountName) return;
+    const newAcc = { id: crypto.randomUUID(), name: accountName.toUpperCase(), type: selectedType };
+    setAccounts([...accounts, newAcc]);
+    setAccountName("");
+  };
+
+  const deleteAccountWithEntryCheck = (id) => {
+    const hasEntries = transactions.some(tx => tx.debitAccountId === id || tx.creditAccountId === id);
+    if (!hasEntries) {
+      setAccounts(accounts.filter(acc => acc.id !== id));
+    } else {
+      alert("Cannot delete: Account has active transactions.");
+    }
+  };
+
+  return (
+    <div>
+      <h2>Account Manager</h2>
+      <div className="form">
+        <input
+          type="text"
+          placeholder="Account Name (e.g. ASIF KHAN)"
+          value={accountName}
+          onChange={e => setAccountName(e.target.value)}
+        />
+        <select value={selectedType} onChange={e => setSelectedType(e.target.value)}>
+          {mainCategories.map(type => <option key={type}>{type}</option>)}
+        </select>
+        <button onClick={addAccount} disabled={!accountName}>Save Account</button>
+      </div>
+
+      <input
+        type="text"
+        placeholder="Search account..."
+        value={searchText}
+        onChange={e => setSearchText(e.target.value)}
+      />
+
+      <ul>
+        {filteredAccounts.map(acc => (
+          <li key={acc.id}>
+            <strong>{acc.name}</strong> <span>{acc.type}</span>
+            <button onClick={() => setEditingAccount(acc)}>Edit</button>
+            <button onClick={() => deleteAccountWithEntryCheck(acc.id)}>Delete</button>
+          </li>
+        ))}
+      </ul>
+
+      {editingAccount && (
+        <div className="modal">
+          <h3>Edit Account</h3>
+          <input
+            type="text"
+            defaultValue={editingAccount.name}
+            onChange={e => editingAccount.name = e.target.value}
+          />
+          <select
+            defaultValue={editingAccount.type}
+            onChange={e => editingAccount.type = e.target.value}
+            disabled={transactions.some(tx => tx.debitAccountId === editingAccount.id || tx.creditAccountId === editingAccount.id)}
+          >
+            {mainCategories.map(type => <option key={type}>{type}</option>)}
+          </select>
+          <button onClick={() => setEditingAccount(null)}>Close</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default AccountManager;
+import React, { useState } from "react";
+import ContentView from "./ContentView";
+import { AppState } from "./appState"; // global store functions
+
+function App() {
+  // Initialize state once
+  const [state] = useState(new AppState());
+
+  return (
+    <div>
+      <ContentView state={state} />
+    </div>
+  );
+}
+
+export default App;
+import { useState } from "react";
+import InvoiceView from "./InvoiceView";
+import VoucherView from "./VoucherView";
+import AccountManager from "./AccountManager";
+import AccountLedger from "./AccountLedger";
+import SettingsModal from "./SettingsModal";
+
+function ContentView({ state }) {
+  const [showSettings, setShowSettings] = useState(false);
+  const [selectedView, setSelectedView] = useState(null);
+
+  const DashboardCard = ({ title, desc, color, onClick }) => (
+    <div
+      style={{
+        background: color,
+        borderRadius: "20px",
+        padding: "20px",
+        color: "white",
+        cursor: "pointer",
+        boxShadow: "0 5px 10px rgba(0,0,0,0.2)"
+      }}
+      onClick={onClick}
+    >
+      <h3>{title}</h3>
+      <p>{desc}</p>
+    </div>
+  );
+
+  if (selectedView === "invoice") return <InvoiceView state={state} />;
+  if (selectedView === "voucher") return <VoucherView state={state} />;
+  if (selectedView === "accounts") return <AccountManager state={state} />;
+  if (selectedView === "reports") return <AccountLedger state={state} />;
+
+  return (
+    <div>
+      <header style={{ display: "flex", justifyContent: "space-between", padding: "20px" }}>
+        <div>
+          <span style={{ fontSize: "10px", fontWeight: "bold", color: "blue" }}>
+            MANAGEMENT SYSTEM
+          </span>
+          <h2>{state.companyName || "MY BUSINESS"}</h2>
+        </div>
+        <button onClick={() => setShowSettings(true)}>⚙️</button>
+      </header>
+
+      <h4 style={{ marginLeft: "20px", color: "gray" }}>BUSINESS OPERATIONS</h4>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", padding: "20px" }}>
+        <DashboardCard title="INVOICE" desc="Sales & Purchase" color="blue" onClick={() => setSelectedView("invoice")} />
+        <DashboardCard title="VOUCHER" desc="Cash Flow" color="green" onClick={() => setSelectedView("voucher")} />
+        <DashboardCard title="ACCOUNTS" desc="Party Balance" color="orange" onClick={() => setSelectedView("accounts")} />
+        <DashboardCard title="REPORTS" desc="Audit History" color="indigo" onClick={() => setSelectedView("reports")} />
+      </div>
+
+      {showSettings && <SettingsModal state={state} onClose={() => setShowSettings(false)} />}
+    </div>
+  );
+}
+
+export default ContentView;
+import jsPDF from "jspdf";
+import "jspdf-autotable";
+
+function InvoicePDF({ invoice, state, items }) {
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text(state.companyName, 20, 20);
+    doc.setFontSize(10);
+    doc.text(state.companyAddress, 20, 30);
+    doc.text(`Phone: ${state.companyPhone}`, 20, 35);
+    doc.text(`Email: ${state.companyEmail}`, 20, 40);
+
+    doc.setFontSize(16);
+    doc.text("INVOICE", 150, 20);
+
+    doc.autoTable({
+      head: [["Description", "Qty", "Rate", "Total"]],
+      body: items.map(item => [
+        item.particular,
+        item.units,
+        item.rate.toFixed(2),
+        item.total.toFixed(2)
+      ]),
+      startY: 60
     });
-    setData("vouchers", vouchers);
-    renderVouchers();
-    e.target.reset();
+
+    doc.text(`Bank: ${state.bankName}`, 20, doc.lastAutoTable.finalY + 20);
+    doc.text(`Acc Name: ${state.bankAccName}`, 20, doc.lastAutoTable.finalY + 25);
+    doc.text(`Acc No: ${state.bankAccNo}`, 20, doc.lastAutoTable.finalY + 30);
+    doc.text(`SWIFT: ${state.bankSwift}`, 20, doc.lastAutoTable.finalY + 35);
+
+    doc.setFontSize(14);
+    doc.text(`BALANCE DUE HKD ${invoice.amount.toFixed(2)}`, 150, doc.lastAutoTable.finalY + 50);
+
+    doc.save(`${invoice.voucherNo}.pdf`);
+  };
+
+  return (
+    <div style={{ padding: "20px" }}>
+      <h2>{state.companyName}</h2>
+      <p>{state.companyAddress}</p>
+      <p>Phone: {state.companyPhone} | Email: {state.companyEmail}</p>
+      <h3 style={{ color: "blue" }}>INVOICE</h3>
+      <p>BR NO: {state.bankBRCode}</p>
+      <p>Date: {new Date(invoice.date).toLocaleDateString()}</p>
+      <p>Invoice No: {invoice.voucherNo}</p>
+
+      <h4>Bill To: {invoice.debitAccountName}</h4>
+      <h4>Ship To: Goods collected by client</h4>
+
+      <table border="1" width="100%" style={{ marginTop: "20px" }}>
+        <thead>
+          <tr>
+            <th>Description</th><th>Qty</th><th>Rate</th><th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map(item => (
+            <tr key={item.id}>
+              <td>{item.particular}</td>
+              <td>{item.units}</td>
+              <td>{item.rate.toFixed(2)}</td>
+              <td>{item.total.toFixed(2)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <h4 style={{ marginTop: "20px", color: "blue" }}>
+        Balance Due HKD {invoice.amount.toFixed(2)}
+      </h4>
+
+      <p>Authorized Signature for and on behalf of {state.companyName}</p>
+
+      <button onClick={downloadPDF}>Download Invoice PDF</button>
+    </div>
+  );
+}
+
+export default InvoicePDF;
+import { useState } from "react";
+import jsPDF from "jspdf";
+
+function InvoiceView({ state }) {
+  const [invoiceType, setInvoiceType] = useState("SALE");
+  const [date, setDate] = useState(new Date());
+  const [invoiceNo, setInvoiceNo] = useState("");
+  const [selectedPartyIndex, setSelectedPartyIndex] = useState(0);
+  const [items, setItems] = useState([{ id: crypto.randomUUID(), particular: "", units: 0, rate: 0 }]);
+
+  const grandTotal = items.reduce((sum, item) => sum + item.units * item.rate, 0);
+
+  const addRow = () => setItems([...items, { id: crypto.randomUUID(), particular: "", units: 0, rate: 0 }]);
+  const deleteRow = (id) => setItems(items.filter(item => item.id !== id));
+
+  const postInvoice = () => {
+    const invoice = {
+      id: crypto.randomUUID(),
+      voucherNo: invoiceNo || `${invoiceType}-INV-${Date.now()}`,
+      date,
+      debitAccountId: state.accounts[selectedPartyIndex].id,
+      debitAccountName: state.accounts[selectedPartyIndex].name,
+      creditAccountId: null,
+      creditAccountName: "",
+      amount: grandTotal,
+      narration: invoiceType,
+      type: "Invoice",
+      isInvoice: true,
+      invoiceItems: items
+    };
+    state.transactions.push(invoice);
+    localStorage.setItem("stored_transactions_data", JSON.stringify(state.transactions));
+    alert("Invoice saved!");
+  };
+
+  const shareInvoiceAsPDF = () => {
+    const doc = new jsPDF();
+    doc.text(`Invoice No: ${invoiceNo}`, 20, 20);
+    doc.text(`Date: ${date.toLocaleDateString()}`, 20, 30);
+    doc.text(`Party: ${state.accounts[selectedPartyIndex].name}`, 20, 40);
+    doc.autoTable({
+      head: [["Item", "Qty", "Rate", "Total"]],
+      body: items.map(i => [i.particular, i.units, i.rate.toFixed(2), (i.units * i.rate).toFixed(2)])
+    });
+    doc.text(`Grand Total: ${grandTotal.toFixed(2)}`, 20, doc.lastAutoTable.finalY + 20);
+    doc.save(`${invoiceNo}.pdf`);
+  };
+
+  return (
+    <div>
+      <h2>{invoiceType} Invoice</h2>
+      <input type="date" value={date.toISOString().split("T")[0]} onChange={e => setDate(new Date(e.target.value))} />
+      <select value={selectedPartyIndex} onChange={e => setSelectedPartyIndex(Number(e.target.value))}>
+        {state.accounts.map((acc, i) => <option key={acc.id} value={i}>{acc.name}</option>)}
+      </select>
+
+      <table>
+        <thead>
+          <tr><th>Item</th><th>Qty</th><th>Rate</th><th>Total</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          {items.map(item => (
+            <tr key={item.id}>
+              <td><input value={item.particular} onChange={e => item.particular = e.target.value} /></td>
+              <td><input type="number" value={item.units} onChange={e => item.units = Number(e.target.value)} /></td>
+              <td><input type="number" value={item.rate} onChange={e => item.rate = Number(e.target.value)} /></td>
+              <td>{(item.units * item.rate).toFixed(2)}</td>
+              <td><button onClick={() => deleteRow(item.id)}>Delete</button></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <button onClick={addRow}>Add Row</button>
+
+      <h3>Total: {grandTotal.toFixed(2)}</h3>
+      <button onClick={postInvoice}>Post Invoice</button>
+      <button onClick={shareInvoiceAsPDF}>Download PDF</button>
+    </div>
+  );
+}
+
+export default InvoiceView;
+function resetToNew() {
+  setCurrentIndex(0);
+  setItems([{ id: crypto.randomUUID(), particular: "", units: 0, rate: 0 }]);
+  updateInv();
+}
+
+function addRow(afterId) {
+  const idx = items.findIndex(i => i.id === afterId);
+  const newItem = { id: crypto.randomUUID(), particular: "", units: 0, rate: 0 };
+  const newItems = [...items];
+  newItems.splice(idx + 1, 0, newItem);
+  setItems(newItems);
+}
+
+function deleteRow(id) {
+  if (items.length > 1) {
+    setItems(items.filter(i => i.id !== id));
   }
-  function renderVouchers() {
-    const vouchers = getData("vouchers");
-    document.getElementById("voucherList").innerHTML = vouchers.map(v =>
-      `<div class="card">${v.no
+}
+
+function postInvoice() {
+  const party = state.accounts[selectedPartyIndex];
+  const newTx = {
+    id: crypto.randomUUID(),
+    voucherNo: invoiceNo,
+    date,
+    debitAccountId: invoiceType === "SALE" ? party.id : crypto.randomUUID(),
+    creditAccountId: invoiceType === "SALE" ? crypto.randomUUID() : party.id,
+    debitAccountName: party.name,
+    creditAccountName: party.name,
+    amount: grandTotal,
+    narration: `${invoiceType}: ${invoiceNo}`,
+    isInvoice: true,
+    invoiceItems: items
+  };
+
+  if (currentIndex === 0) {
+    state.transactions.push(newTx);
+    resetToNew();
+  } else {
+    state.transactions[currentIndex - 1] = newTx;
+  }
+  localStorage.setItem("stored_transactions_data", JSON.stringify(state.transactions));
+}
+
+function deleteInvoice() {
+  if (currentIndex !== 0) {
+    const idToDelete = state.transactions[currentIndex - 1].id;
+    state.transactions = state.transactions.filter(tx => tx.id !== idToDelete);
+    resetToNew();
+  }
+}
+
+function navigate(d) {
+  const invs = state.transactions.filter(tx => tx.isInvoice && tx.narration.includes(invoiceType));
+  let newIdx = (currentIndex === 0 ? invs.length + 1 : currentIndex) + d;
+  if (newIdx > 0 && newIdx <= invs.length) {
+    const inv = invs[newIdx - 1];
+    setCurrentIndex(newIdx);
+    setInvoiceNo(inv.voucherNo);
+    setItems(inv.invoiceItems || []);
+    setDate(new Date(inv.date));
+    const pIdx = state.accounts.findIndex(acc => acc.id === inv.debitAccountId || acc.id === inv.creditAccountId);
+    setSelectedPartyIndex(pIdx);
+  } else if (newIdx > invs.length) {
+    resetToNew();
+  }
+}
+function postInvoice() {
+  const party = state.accounts[selectedPartyIndex];
+  const newTx = {
+    id: crypto.randomUUID(),
+    voucherNo: invoiceNo,
+    date,
+    debitAccountId: invoiceType === "SALE" ? party.id : crypto.randomUUID(),
+    creditAccountId: invoiceType === "SALE" ? crypto.randomUUID() : party.id,
+    debitAccountName: party.name,
+    creditAccountName: party.name,
+    amount: grandTotal,
+    narration: `${invoiceType}: ${invoiceNo}`,
+    isInvoice: true,
+    invoiceItems: items
+  };
+  if (currentIndex === 0) {
+    state.transactions.push(newTx);
+    resetToNew();
+  } else {
+    state.transactions[currentIndex - 1] = newTx;
+  }
+  localStorage.setItem("stored_transactions_data", JSON.stringify(state.transactions));
+}
+function shareInvoiceAsPDF() {
+  const doc = new jsPDF();
+  doc.text(`Invoice No: ${invoiceNo}`, 20, 20);
+  doc.text(`Date: ${date.toLocaleDateString()}`, 20, 30);
+  doc.text(`Party: ${state.accounts[selectedPartyIndex].name}`, 20, 40);
+  doc.autoTable({
+    head: [["Item", "Qty", "Rate", "Total"]],
+    body: items.map(i => [i.particular, i.units, i.rate.toFixed(2), (i.units * i.rate).toFixed(2)])
+  });
+  doc.text(`Grand Total: ${grandTotal.toFixed(2)}`, 20, doc.lastAutoTable.finalY + 20);
+  doc.save(`${invoiceNo}.pdf`);
+}
