@@ -46,7 +46,12 @@
     <input type="text" id="invoiceNo" placeholder="Invoice No" required><br><br>
     <input type="date" id="invoiceDate" required><br><br>
     <input type="text" id="partyName" placeholder="Party Name" required><br><br>
-    <input type="number" id="amount" placeholder="Amount" required><br><br>
+    <table>
+      <thead><tr><th>Item</th><th>Qty</th><th>Rate</th><th>Total</th></tr></thead>
+      <tbody id="invoiceItems"></tbody>
+    </table>
+    <button type="button" class="btn" onclick="addInvoiceRow()">Add Row</button><br><br>
+    <h3 id="grandTotal">Grand Total: 0</h3>
     <button class="btn" type="submit">Save Invoice</button>
   </form>
   <h3>Saved Invoices</h3>
@@ -89,7 +94,7 @@
 <!-- Reports -->
 <section id="reports">
   <h2>Reports</h2>
-  <div class="card">Reports will show ledger balances and transactions here.</div>
+  <div id="reportList"></div>
 </section>
 
 <script>
@@ -103,23 +108,57 @@
   function setData(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
 
   // Invoice
+  function addInvoiceRow() {
+    const tbody = document.getElementById("invoiceItems");
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td><input type="text" placeholder="Item"></td>
+      <td><input type="number" value="0" onchange="updateTotal()"></td>
+      <td><input type="number" value="0" onchange="updateTotal()"></td>
+      <td class="rowTotal">0</td>
+    `;
+    tbody.appendChild(row);
+  }
+  function updateTotal() {
+    let total = 0;
+    document.querySelectorAll("#invoiceItems tr").forEach(tr => {
+      const qty = parseFloat(tr.children[1].children[0].value) || 0;
+      const rate = parseFloat(tr.children[2].children[0].value) || 0;
+      const rowTotal = qty * rate;
+      tr.children[3].textContent = rowTotal.toFixed(2);
+      total += rowTotal;
+    });
+    document.getElementById("grandTotal").textContent = "Grand Total: " + total.toFixed(2);
+  }
   function saveInvoice(e) {
     e.preventDefault();
     const invoices = getData("invoices");
+    const items = [];
+    document.querySelectorAll("#invoiceItems tr").forEach(tr => {
+      items.push({
+        item: tr.children[0].children[0].value,
+        qty: tr.children[1].children[0].value,
+        rate: tr.children[2].children[0].value,
+        total: tr.children[3].textContent
+      });
+    });
     invoices.push({
       no: document.getElementById("invoiceNo").value,
       date: document.getElementById("invoiceDate").value,
       party: document.getElementById("partyName").value,
-      amount: document.getElementById("amount").value
+      items: items,
+      amount: document.getElementById("grandTotal").textContent
     });
     setData("invoices", invoices);
     renderInvoices();
     e.target.reset();
+    document.getElementById("invoiceItems").innerHTML = "";
+    document.getElementById("grandTotal").textContent = "Grand Total: 0";
   }
   function renderInvoices() {
     const invoices = getData("invoices");
     document.getElementById("invoiceList").innerHTML = invoices.map(i =>
-      `<div class="card">${i.no} | ${i.date} | ${i.party} | HKD ${i.amount}</div>`
+      `<div class="card">${i.no} | ${i.date} | ${i.party} | ${i.amount}</div>`
     ).join("");
   }
 
@@ -141,34 +180,4 @@
   function renderVouchers() {
     const vouchers = getData("vouchers");
     document.getElementById("voucherList").innerHTML = vouchers.map(v =>
-      `<div class="card">${v.no} | ${v.date} | ${v.account} | HKD ${v.amount} | ${v.narration}</div>`
-    ).join("");
-  }
-
-  // Accounts
-  function saveAccount(e) {
-    e.preventDefault();
-    const accounts = getData("accounts");
-    accounts.push({
-      name: document.getElementById("accountName").value,
-      type: document.getElementById("accountType").value
-    });
-    setData("accounts", accounts);
-    renderAccounts();
-    e.target.reset();
-  }
-  function renderAccounts() {
-    const accounts = getData("accounts");
-    document.getElementById("accountList").innerHTML = accounts.map(a =>
-      `<div class="card">${a.name} (${a.type})</div>`
-    ).join("");
-  }
-
-  // Initial render
-  renderInvoices();
-  renderVouchers();
-  renderAccounts();
-</script>
-
-</body>
-</html>
+      `<div class="card">${v.no
