@@ -3,235 +3,255 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2Smart ERP v1.0</title>
+    <title>2Smart Pvt Ltd | Pro Suite</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    
     <style>
-        body { background-color: #f3f4f6; font-family: -apple-system, system-ui; user-select: none; }
-        .ios-card { background: white; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .active-tab { background: #3b82f6 !important; color: white !important; }
-        input, select { outline: none; }
+        :root { --ios-blue: #007AFF; --ios-purple: #5856D6; }
+        body { background: #F2F2F7; font-family: -apple-system, system-ui, sans-serif; color: #1C1C1E; overflow-x: hidden; }
+        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.3); }
+        .btn-active { transform: scale(0.96); opacity: 0.8; }
+        .gradient-blue { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .gradient-green { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .gradient-orange { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        .gradient-purple { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .ios-shadow { box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1); }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; }
     </style>
 </head>
-<body class="p-4 pb-20">
+<body class="pb-24">
 
-    <div id="view-dashboard" class="max-w-md mx-auto">
-        <header class="flex justify-between items-center mb-6">
-            <div>
-                <span class="text-blue-500 text-[10px] font-black tracking-widest uppercase">Management System</span>
-                <h1 class="text-2xl font-black text-gray-900">2SMART PVT LIMITED</h1>
-            </div>
-            <button onclick="resetData()" class="bg-gray-200 p-3 rounded-2xl text-xs">Reset</button>
-        </header>
+    <nav class="sticky top-0 z-50 glass p-4 flex justify-between items-center ios-shadow">
+        <div id="nav-title">
+            <span class="text-[10px] font-black text-blue-500 tracking-widest uppercase">Management System</span>
+            <h1 class="text-xl font-black">2SMART PVT LTD</h1>
+        </div>
+        <button onclick="resetSystem()" class="bg-gray-100 p-2 rounded-full text-lg">⚙️</button>
+    </nav>
 
-        <div class="grid grid-cols-2 gap-4">
-            <div onclick="openView('invoice')" class="bg-blue-600 p-6 rounded-[30px] text-white shadow-lg">
-                <div class="bg-white/20 w-8 h-8 rounded-full flex items-center justify-center mb-4">📄</div>
-                <h2 class="font-bold">INVOICE</h2>
-                <p class="text-[10px] opacity-70">Sales & Purchase</p>
-            </div>
-            <div onclick="openView('voucher')" class="bg-green-600 p-6 rounded-[30px] text-white shadow-lg">
-                <div class="bg-white/20 w-8 h-8 rounded-full flex items-center justify-center mb-4">💰</div>
-                <h2 class="font-bold">VOUCHER</h2>
-                <p class="text-[10px] opacity-70">Cash Flow</p>
-            </div>
-            <div onclick="openView('accounts')" class="bg-orange-500 p-6 rounded-[30px] text-white shadow-lg">
-                <div class="bg-white/20 w-8 h-8 rounded-full flex items-center justify-center mb-4">📇</div>
-                <h2 class="font-bold">ACCOUNTS</h2>
-                <p class="text-[10px] opacity-70">Party Balance</p>
+    <main class="p-4 max-w-2xl mx-auto">
+        
+        <div id="view-dash" class="space-y-6">
+            <p class="text-gray-500 font-bold text-xs uppercase tracking-widest">Business Operations</p>
+            <div class="grid grid-cols-2 gap-4">
+                <div onclick="showView('invoice')" class="gradient-blue p-6 rounded-[32px] text-white ios-shadow cursor-pointer active:btn-active">
+                    <div class="bg-white/20 w-10 h-10 rounded-2xl flex items-center justify-center mb-6 text-xl">📄</div>
+                    <h3 class="font-black text-lg">INVOICE</h3>
+                    <p class="text-[10px] font-medium opacity-80">Sales & Purchase</p>
+                </div>
+                <div onclick="showView('voucher')" class="gradient-green p-6 rounded-[32px] text-white ios-shadow cursor-pointer active:btn-active">
+                    <div class="bg-white/20 w-10 h-10 rounded-2xl flex items-center justify-center mb-6 text-xl">💵</div>
+                    <h3 class="font-black text-lg">VOUCHER</h3>
+                    <p class="text-[10px] font-medium opacity-80">Cash Flow</p>
+                </div>
+                <div onclick="showView('accounts')" class="gradient-orange p-6 rounded-[32px] text-white ios-shadow cursor-pointer active:btn-active">
+                    <div class="bg-white/20 w-10 h-10 rounded-2xl flex items-center justify-center mb-6 text-xl">📇</div>
+                    <h3 class="font-black text-lg">ACCOUNTS</h3>
+                    <p class="text-[10px] font-medium opacity-80">Party Balance</p>
+                </div>
+                <div onclick="alert('Reports coming soon!')" class="gradient-purple p-6 rounded-[32px] text-white ios-shadow cursor-pointer active:btn-active">
+                    <div class="bg-white/20 w-10 h-10 rounded-2xl flex items-center justify-center mb-6 text-xl">📊</div>
+                    <h3 class="font-black text-lg">REPORTS</h3>
+                    <p class="text-[10px] font-medium opacity-80">Audit History</p>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div id="view-invoice" class="hidden max-w-md mx-auto">
-        <div class="flex items-center gap-2 mb-4">
-            <button onclick="openView('dashboard')" class="text-blue-600 font-bold">← Back</button>
-            <h2 class="text-xl font-black ml-4">Invoice Entry</h2>
-        </div>
-        <div class="ios-card p-4">
-            <div class="flex gap-2 mb-4">
-                <button id="btn-sale" onclick="setInvType('SALE')" class="flex-1 py-2 rounded-xl font-bold bg-blue-600 text-white">SALE</button>
-                <button id="btn-purchase" onclick="setInvType('PURCHASE')" class="flex-1 py-2 rounded-xl font-bold bg-gray-200 text-gray-700">PURCHASE</button>
-            </div>
-            <select id="inv-party" class="w-full p-3 bg-gray-100 rounded-xl mb-3"></select>
-            <input type="number" id="inv-amount" placeholder="0.00" class="w-full p-4 text-3xl font-bold bg-blue-50 text-blue-600 rounded-xl mb-4">
-            <input type="text" id="inv-remarks" placeholder="Narration" class="w-full p-3 bg-gray-100 rounded-xl mb-4">
-            <button onclick="saveInvoice()" class="w-full bg-green-500 text-white font-black py-4 rounded-2xl">POST INVOICE</button>
-        </div>
-    </div>
-
-    <div id="view-voucher" class="hidden max-w-md mx-auto">
-        <div class="flex items-center gap-2 mb-4">
-            <button onclick="openView('dashboard')" class="text-blue-600 font-bold">← Back</button>
-            <h2 class="text-xl font-black ml-4">Voucher Entry</h2>
-        </div>
-        <div class="ios-card p-4">
-            <div class="flex gap-2 mb-4">
-                <button id="btn-rct" onclick="setVoucherType('RCT')" class="flex-1 py-2 rounded-xl font-bold bg-purple-600 text-white">RECEIPT (In)</button>
-                <button id="btn-pay" onclick="setVoucherType('PAY')" class="flex-1 py-2 rounded-xl font-bold bg-gray-200">PAYMENT (Out)</button>
-            </div>
-            <select id="vouch-party" class="w-full p-3 bg-gray-100 rounded-xl mb-3"></select>
-            <input type="number" id="vouch-amount" placeholder="0.00" class="w-full p-4 text-3xl font-bold bg-purple-50 text-purple-600 rounded-xl mb-4">
-            <input type="text" id="vouch-remarks" placeholder="Narration" class="w-full p-3 bg-gray-100 rounded-xl mb-4">
-            <button onclick="saveVoucher()" class="w-full bg-purple-600 text-white font-black py-4 rounded-2xl">POST VOUCHER</button>
-        </div>
-    </div>
-
-    <div id="view-accounts" class="hidden max-w-md mx-auto">
-        <button onclick="openView('dashboard')" class="text-blue-600 font-bold mb-4">← Back</button>
-        <h2 class="text-2xl font-black mb-4">Accounts</h2>
-        <div id="party-list" class="space-y-3"></div>
-    </div>
-
-    <div id="view-ledger" class="hidden max-w-md mx-auto">
-        <button onclick="openView('accounts')" class="text-blue-600 font-bold mb-4">← Back</button>
-        <div class="ios-card p-4 mb-4">
-            <h2 id="ledger-name" class="text-xl font-black">---</h2>
-            <p id="ledger-status" class="text-blue-500 text-xs font-bold">RECEIVABLE</p>
-            <div class="mt-2 text-right">
-                <p class="text-xs text-gray-500">Current Balance</p>
-                <p id="ledger-total" class="text-2xl font-black text-blue-600">HKD 0.00</p>
+        <div id="view-invoice" class="hidden space-y-4">
+            <button onclick="showView('dash')" class="text-blue-500 font-bold">← Back to Home</button>
+            <div class="bg-white rounded-[32px] p-6 ios-shadow">
+                <div class="flex bg-gray-100 p-1 rounded-2xl mb-6">
+                    <button id="mode-sale" onclick="setMode('SALE')" class="flex-1 py-3 rounded-xl font-black bg-white shadow-sm text-blue-600 transition-all">SALE</button>
+                    <button id="mode-pur" onclick="setMode('PURCHASE')" class="flex-1 py-3 rounded-xl font-black text-gray-500 transition-all">PURCHASE</button>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase ml-2">Select Party</label>
+                        <select id="inv-party" class="w-full p-4 bg-gray-50 border rounded-2xl font-bold"></select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase ml-2">Total Amount</label>
+                        <input type="number" id="inv-amount" placeholder="0.00" class="w-full p-6 text-4xl font-black bg-blue-50 text-blue-600 rounded-[24px]">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase ml-2">Narration</label>
+                        <textarea id="inv-note" placeholder="Item details, model, qty..." class="w-full p-4 bg-gray-50 border rounded-2xl h-24"></textarea>
+                    </div>
+                    <button onclick="processInvoice()" class="w-full bg-blue-600 text-white font-black py-5 rounded-[24px] text-lg shadow-lg active:btn-active">POST & SAVE</button>
+                </div>
             </div>
         </div>
-        <div class="bg-white rounded-xl overflow-hidden shadow-sm">
-            <table class="w-full text-[10px]">
-                <thead class="bg-gray-100 font-bold">
-                    <tr><th class="p-2 text-left">Date</th><th class="p-2 text-left">Particulars</th><th class="p-2 text-right">Amount</th><th class="p-2 text-right">Balance</th></tr>
-                </thead>
-                <tbody id="ledger-rows"></tbody>
-            </table>
+
+        <div id="view-accounts" class="hidden space-y-4">
+            <button onclick="showView('dash')" class="text-blue-500 font-bold">← Back</button>
+            <h2 class="text-2xl font-black">Account Ledger</h2>
+            <div id="acc-list-container" class="space-y-3"></div>
         </div>
-    </div>
+
+        <div id="view-ledger-detail" class="hidden space-y-4">
+            <button onclick="showView('accounts')" class="text-blue-500 font-bold">← Back to List</button>
+            <div class="bg-white rounded-3xl p-6 ios-shadow text-center">
+                <h2 id="ledger-title" class="text-2xl font-black uppercase">ASIF AK</h2>
+                <span class="bg-blue-100 text-blue-600 text-[10px] px-3 py-1 rounded-full font-black">RECEIVABLE</span>
+                <div class="mt-6 flex justify-between items-end border-t pt-4">
+                    <div class="text-left"><p class="text-gray-400 text-xs font-bold uppercase">Balance HKD</p></div>
+                    <h3 id="ledger-balance" class="text-3xl font-black text-blue-600">3,090,000.00</h3>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto bg-white rounded-3xl ios-shadow">
+                <table class="w-full text-xs">
+                    <thead class="bg-gray-50 border-b">
+                        <tr>
+                            <th class="p-3 text-left">Date</th>
+                            <th class="p-3 text-left">Particulars</th>
+                            <th class="p-3 text-right">Amount</th>
+                            <th class="p-3 text-right">Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ledger-table-body"></tbody>
+                </table>
+            </div>
+            <button onclick="generatePDF()" class="w-full bg-black text-white font-black py-4 rounded-2xl flex items-center justify-center gap-3 active:btn-active">
+                📤 Share Professional Ledger
+            </button>
+        </div>
+
+    </main>
 
     <script>
-        // --- CORE LOGIC & DATABASE ---
-        let db = JSON.parse(localStorage.getItem('2smart_db')) || {
+        // --- PRO DATA ENGINE ---
+        let db = JSON.parse(localStorage.getItem('2smart_pro_db')) || {
             parties: [
-                { id: 'R-101', name: 'ASIF AK', type: 'Receivable' },
-                { id: 'P-102', name: 'HONGKONG', type: 'Payable' },
-                { id: 'R-104', name: 'HASAN DND', type: 'Receivable' }
+                {id: 'R-101', name: 'ASIF AK', type: 'Receivable'},
+                {id: 'P-102', name: 'HONGKONG', type: 'Payable'},
+                {id: 'R-103', name: 'TMG', type: 'Receivable'},
+                {id: 'R-104', name: 'HASAN DND', type: 'Receivable'}
             ],
-            transactions: []
+            tx: []
         };
 
-        let currentInvType = 'SALE';
-        let currentVouchType = 'RCT';
+        let currentMode = 'SALE';
+        let activeParty = null;
 
-        function openView(id) {
-            document.querySelectorAll('[id^="view-"]').forEach(v => v.classList.add('hidden'));
+        function showView(id) {
+            document.querySelectorAll('main > div').forEach(d => d.classList.add('hidden'));
             document.getElementById('view-' + id).classList.remove('hidden');
-            if(id === 'accounts') renderPartyList();
-            refreshSelectors();
+            if(id === 'accounts') renderAccounts();
+            populateParties();
         }
 
-        function refreshSelectors() {
-            const html = db.parties.map(p => `<option value="${p.id}">${p.id} | ${p.name}</option>`).join('');
-            document.getElementById('inv-party').innerHTML = html;
-            document.getElementById('vouch-party').innerHTML = html;
+        function populateParties() {
+            const select = document.getElementById('inv-party');
+            if(select) {
+                select.innerHTML = db.parties.map(p => `<option value="${p.id}">${p.id} | ${p.name}</option>`).join('');
+            }
         }
 
-        function setInvType(t) {
-            currentInvType = t;
-            document.getElementById('btn-sale').className = t === 'SALE' ? 'flex-1 py-2 rounded-xl font-bold bg-blue-600 text-white' : 'flex-1 py-2 rounded-xl font-bold bg-gray-200';
-            document.getElementById('btn-purchase').className = t === 'PURCHASE' ? 'flex-1 py-2 rounded-xl font-bold bg-blue-600 text-white' : 'flex-1 py-2 rounded-xl font-bold bg-gray-200';
+        function setMode(m) {
+            currentMode = m;
+            document.getElementById('mode-sale').className = m === 'SALE' ? "flex-1 py-3 rounded-xl font-black bg-white shadow-sm text-blue-600" : "flex-1 py-3 rounded-xl font-black text-gray-500";
+            document.getElementById('mode-pur').className = m === 'PURCHASE' ? "flex-1 py-3 rounded-xl font-black bg-white shadow-sm text-blue-600" : "flex-1 py-3 rounded-xl font-black text-gray-500";
         }
 
-        function setVoucherType(t) {
-            currentVouchType = t;
-            document.getElementById('btn-rct').className = t === 'RCT' ? 'flex-1 py-2 rounded-xl font-bold bg-purple-600 text-white' : 'flex-1 py-2 rounded-xl font-bold bg-gray-200';
-            document.getElementById('btn-pay').className = t === 'PAY' ? 'flex-1 py-2 rounded-xl font-bold bg-purple-600 text-white' : 'flex-1 py-2 rounded-xl font-bold bg-gray-200';
-        }
-
-        function saveInvoice() {
+        function processInvoice() {
             const amt = parseFloat(document.getElementById('inv-amount').value);
-            if(!amt) return;
-            const tx = {
-                id: currentInvType + '-' + Date.now(),
+            if(!amt || amt <= 0) return alert("Bhai, amount to sahi likho!");
+            
+            const newEntry = {
+                id: currentMode === 'SALE' ? `SIN-${(db.tx.length + 1).toString().padStart(5, '0')}` : `PUR-${(db.tx.length + 1).toString().padStart(5, '0')}`,
                 date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
                 partyId: document.getElementById('inv-party').value,
-                particulars: currentInvType + ': ' + (document.getElementById('inv-remarks').value || 'Goods'),
-                amount: amt,
-                type: currentInvType // SALE increases balance, PURCHASE decreases
+                desc: document.getElementById('inv-note').value || 'Mobile Stock',
+                amt: amt,
+                type: currentMode
             };
-            db.transactions.push(tx);
-            saveDB();
-            alert('Invoice Posted!');
-            openView('dashboard');
+
+            db.tx.push(newEntry);
+            save();
+            alert("Record Saved Successfully!");
+            showView('dash');
         }
 
-        function saveVoucher() {
-            const amt = parseFloat(document.getElementById('vouch-amount').value);
-            if(!amt) return;
-            const tx = {
-                id: currentVouchType + '-' + Date.now(),
-                date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
-                partyId: document.getElementById('vouch-party').value,
-                particulars: currentVouchType + ': ' + (document.getElementById('vouch-remarks').value || 'Cash'),
-                amount: amt,
-                type: currentVouchType // RCT decreases balance, PAY increases
-            };
-            db.transactions.push(tx);
-            saveDB();
-            alert('Voucher Posted!');
-            openView('dashboard');
-        }
-
-        function renderPartyList() {
-            const list = document.getElementById('party-list');
-            list.innerHTML = db.parties.map(p => {
-                let bal = calculateBalance(p.id);
+        function renderAccounts() {
+            const container = document.getElementById('acc-list-container');
+            container.innerHTML = db.parties.map(p => {
+                const bal = getBal(p.id);
                 return `
-                <div onclick="showLedger('${p.id}')" class="ios-card p-4 flex justify-between items-center border-l-4 border-orange-500">
+                <div onclick="openLedger('${p.id}')" class="bg-white p-5 rounded-[24px] flex justify-between items-center border border-gray-100 active:btn-active shadow-sm">
                     <div>
-                        <p class="font-black">${p.id} | ${p.name}</p>
-                        <p class="text-[10px] text-blue-500 font-bold uppercase">${p.type}</p>
+                        <h4 class="font-black text-gray-900">${p.id} | ${p.name}</h4>
+                        <p class="text-[9px] font-black text-blue-500 uppercase tracking-tighter">${p.type}</p>
                     </div>
                     <div class="text-right">
-                        <p class="font-black text-blue-600 underline">${bal.toLocaleString()}</p>
+                        <p class="text-lg font-black text-gray-800">${bal.toLocaleString()}</p>
+                        <p class="text-[8px] text-gray-400 font-bold">HKD</p>
                     </div>
                 </div>`;
             }).join('');
         }
 
-        function calculateBalance(partyId) {
-            let bal = 0;
-            db.transactions.filter(t => t.partyId === partyId).forEach(t => {
-                if(t.type === 'SALE' || t.type === 'PAY') bal += t.amount;
-                if(t.type === 'PURCHASE' || t.type === 'RCT') bal -= t.amount;
+        function getBal(pId) {
+            let b = 0;
+            db.tx.filter(t => t.partyId === pId).forEach(t => {
+                if(t.type === 'SALE' || t.type === 'PAY') b += t.amt;
+                else b -= t.amt;
             });
-            return bal;
+            return b;
         }
 
-        function showLedger(partyId) {
-            const party = db.parties.find(p => p.id === partyId);
-            document.getElementById('ledger-name').innerText = party.id + ' | ' + party.name;
-            document.getElementById('ledger-status').innerText = party.type;
+        function openLedger(pId) {
+            activeParty = db.parties.find(p => p.id === pId);
+            document.getElementById('ledger-title').innerText = activeParty.name;
             
-            let runningBal = 0;
-            let rowsHtml = '';
-            const filtered = db.transactions.filter(t => t.partyId === partyId);
-            
-            filtered.forEach(t => {
-                if(t.type === 'SALE' || t.type === 'PAY') runningBal += t.amount;
-                if(t.type === 'PURCHASE' || t.type === 'RCT') runningBal -= t.amount;
+            let runBal = 0;
+            let rows = '';
+            db.tx.filter(t => t.partyId === pId).forEach(t => {
+                if(t.type === 'SALE' || t.type === 'PAY') runBal += t.amt;
+                else runBal -= t.amt;
                 
-                rowsHtml += `
-                <tr class="border-b">
-                    <td class="p-2">${t.date}</td>
-                    <td class="p-2 font-bold text-purple-700">${t.id.split('-')[0]}<br><span class="text-gray-400 font-normal">${t.particulars}</span></td>
-                    <td class="p-2 text-right font-bold ${t.type==='RCT'||t.type==='PURCHASE'?'text-red-500':'text-green-600'}">${t.amount.toLocaleString()}</td>
-                    <td class="p-2 text-right font-black">${runningBal.toLocaleString()}</td>
+                rows += `<tr class="border-b">
+                    <td class="p-3 text-gray-500">${t.date}</td>
+                    <td class="p-3"><span class="font-black text-purple-600 text-[10px]">${t.id}</span><br>${t.desc}</td>
+                    <td class="p-3 text-right font-bold ${t.amt > 0 ? 'text-green-600' : 'text-red-500'}">${t.amt.toLocaleString()}</td>
+                    <td class="p-3 text-right font-black">${runBal.toLocaleString()}</td>
                 </tr>`;
             });
-            
-            document.getElementById('ledger-rows').innerHTML = rowsHtml;
-            document.getElementById('ledger-total').innerText = 'HKD ' + runningBal.toLocaleString();
-            openView('ledger');
+
+            document.getElementById('ledger-table-body').innerHTML = rows;
+            document.getElementById('ledger-balance').innerText = runBal.toLocaleString() + '.00';
+            showView('ledger-detail');
         }
 
-        function saveDB() { localStorage.setItem('2smart_db', JSON.stringify(db)); }
-        function resetData() { if(confirm('Sabu delete kar dein?')) { localStorage.clear(); location.reload(); } }
+        // --- PDF EXPORT ENGINE ---
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(22);
+            doc.text("2SMART PVT LIMITED", 14, 20);
+            doc.setFontSize(10);
+            doc.text(`Ledger Report: ${activeParty.name} (${activeParty.id})`, 14, 30);
+            doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 35);
+            
+            const head = [['Date', 'Voucher', 'Description', 'Amount', 'Balance']];
+            let rBal = 0;
+            const body = db.tx.filter(t => t.partyId === activeParty.id).map(t => {
+                if(t.type === 'SALE' || t.type === 'PAY') rBal += t.amt; else rBal -= t.amt;
+                return [t.date, t.id, t.desc, t.amt.toLocaleString(), rBal.toLocaleString()];
+            });
+
+            doc.autoTable({ head, body, startY: 45, theme: 'grid' });
+            doc.save(`${activeParty.name}_Ledger.pdf`);
+        }
+
+        function save() { localStorage.setItem('2smart_pro_db', JSON.stringify(db)); }
+        function resetSystem() { if(confirm("Clear all data?")) { localStorage.clear(); location.reload(); } }
         
-        refreshSelectors();
+        populateParties();
     </script>
 </body>
 </html>
