@@ -1,565 +1,209 @@
-localStorage.setItem("companyName", "2SMARTS PVT LIMITED");
-const companyName = localStorage.getItem("companyName");
-function saveAccounts(accounts) {
-  localStorage.setItem("stored_accounts_data", JSON.stringify(accounts));
-}
-
-function loadAccounts() {
-  const data = localStorage.getItem("stored_accounts_data");
-  return data ? JSON.parse(data) : [];
-}
-class Account {
-  constructor(name, type) {
-    this.id = crypto.randomUUID(); // unique ID
-    this.name = name;
-    this.type = type;
-  }
-}
-class InvoiceItemRow {
-  constructor(particular, units, rate) {
-    this.id = crypto.randomUUID();
-    this.particular = particular;
-    this.units = units;
-    this.rate = rate;
-  }
-  get total() {
-    return this.units * this.rate;
-  }
-}
-class Transaction {
-  constructor(voucherNo, date, debitAccountId, creditAccountId, debitAccountName, creditAccountName, amount, narration, type="Pay In", isInvoice=false, invoiceItems=[]) {
-    this.id = crypto.randomUUID();
-    this.voucherNo = voucherNo;
-    this.date = date; // store as Date object
-    this.debitAccountId = debitAccountId;
-    this.creditAccountId = creditAccountId;
-    this.debitAccountName = debitAccountName;
-    this.creditAccountName = creditAccountName;
-    this.amount = amount;
-    this.narration = narration;
-    this.type = type;
-    this.isInvoice = isInvoice;
-    this.invoiceItems = invoiceItems;
-  }
-}
-function AccountDetail({ account, transactions }) {
-  const entries = transactions
-    .filter(tx => tx.debitAccountId === account.id || tx.creditAccountId === account.id)
-    .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-  const calculateRunningBalances = () => {
-    let balances = [];
-    let current = 0;
-    entries.forEach(tx => {
-      const isDebit = tx.debitAccountId === account.id;
-      current += isDebit ? tx.amount : -tx.amount;
-      balances.push(current);
-    });
-    return balances;
-  };
-
-  const finalBalance = calculateRunningBalances().slice(-1)[0] || 0;
-
-  return (
-    <div>
-      <header>
-        <h2>{account.name}</h2>
-        <p>{account.type}</p>
-        <h3>Current Balance: HKD {finalBalance.toFixed(2)}</h3>
-      </header>
-
-      <div className="table-header">
-        <span>Date</span>
-        <span>Particulars</span>
-        <span>Amount</span>
-        <span>Balance</span>
-      </div>
-
-      {entries.map((tx, i) => {
-        const isDebit = tx.debitAccountId === account.id;
-        const balances = calculateRunningBalances();
-        return (
-          <div key={tx.id} className="row">
-            <span>{new Date(tx.date).toLocaleDateString()}</span>
-            <span>{tx.voucherNo} - {tx.narration}</span>
-            <span style={{color: isDebit ? "green" : "red"}}>
-              {tx.amount.toFixed(2)}
-            </span>
-            <span>{balances[i].toFixed(2)}</span>
-          </div>
-        );
-      })}
-
-      <button onClick={() => renderPDF(entries, account)}>Download Ledger PDF</button>
-    </div>
-  );
-}
-import { useState } from "react";
-import AccountDetail from "./AccountDetail";
-
-function AccountLedger({ accounts, transactions }) {
-  const [searchText, setSearchText] = useState("");
-  const [selectedAccount, setSelectedAccount] = useState(null);
-
-  const filteredAccounts = accounts.filter(acc =>
-    acc.name.toLowerCase().includes(searchText.toLowerCase())
-  );
-
-  if (selectedAccount) {
-    return <AccountDetail account={selectedAccount} transactions={transactions} />;
-  }
-
-  return (
-    <div>
-      <h2>Accounts</h2>
-      <input
-        type="text"
-        placeholder="Search account name..."
-        value={searchText}
-        onChange={e => setSearchText(e.target.value)}
-        style={{ padding: "10px", borderRadius: "8px", width: "100%" }}
-      />
-
-      <ul>
-        {filteredAccounts.map(acc => (
-          <li
-            key={acc.id}
-            style={{ padding: "8px", cursor: "pointer", borderBottom: "1px solid #ccc" }}
-            onClick={() => setSelectedAccount(acc)}
-          >
-            <strong>{acc.name}</strong>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-export default AccountLedger;
-import { useState } from "react";
-
-function AccountManager({ accounts, setAccounts, transactions }) {
-  const [accountName, setAccountName] = useState("");
-  const [selectedType, setSelectedType] = useState("Receivable");
-  const [searchText, setSearchText] = useState("");
-  const [editingAccount, setEditingAccount] = useState(null);
-
-  const mainCategories = ["Receivable", "Payable", "Cash", "Bank", "Expense"];
-
-  const filteredAccounts = accounts.filter(acc =>
-    acc.name.toLowerCase().includes(searchText.toLowerCase())
-  );
-
-  const addAccount = () => {
-    if (!accountName) return;
-    const newAcc = { id: crypto.randomUUID(), name: accountName.toUpperCase(), type: selectedType };
-    setAccounts([...accounts, newAcc]);
-    setAccountName("");
-  };
-
-  const deleteAccountWithEntryCheck = (id) => {
-    const hasEntries = transactions.some(tx => tx.debitAccountId === id || tx.creditAccountId === id);
-    if (!hasEntries) {
-      setAccounts(accounts.filter(acc => acc.id !== id));
-    } else {
-      alert("Cannot delete: Account has active transactions.");
-    }
-  };
-
-  return (
-    <div>
-      <h2>Account Manager</h2>
-      <div className="form">
-        <input
-          type="text"
-          placeholder="Account Name (e.g. ASIF KHAN)"
-          value={accountName}
-          onChange={e => setAccountName(e.target.value)}
-        />
-        <select value={selectedType} onChange={e => setSelectedType(e.target.value)}>
-          {mainCategories.map(type => <option key={type}>{type}</option>)}
-        </select>
-        <button onClick={addAccount} disabled={!accountName}>Save Account</button>
-      </div>
-
-      <input
-        type="text"
-        placeholder="Search account..."
-        value={searchText}
-        onChange={e => setSearchText(e.target.value)}
-      />
-
-      <ul>
-        {filteredAccounts.map(acc => (
-          <li key={acc.id}>
-            <strong>{acc.name}</strong> <span>{acc.type}</span>
-            <button onClick={() => setEditingAccount(acc)}>Edit</button>
-            <button onClick={() => deleteAccountWithEntryCheck(acc.id)}>Delete</button>
-          </li>
-        ))}
-      </ul>
-
-      {editingAccount && (
-        <div className="modal">
-          <h3>Edit Account</h3>
-          <input
-            type="text"
-            defaultValue={editingAccount.name}
-            onChange={e => editingAccount.name = e.target.value}
-          />
-          <select
-            defaultValue={editingAccount.type}
-            onChange={e => editingAccount.type = e.target.value}
-            disabled={transactions.some(tx => tx.debitAccountId === editingAccount.id || tx.creditAccountId === editingAccount.id)}
-          >
-            {mainCategories.map(type => <option key={type}>{type}</option>)}
-          </select>
-          <button onClick={() => setEditingAccount(null)}>Close</button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-export default AccountManager;
-import React, { useState } from "react";
-import ContentView from "./ContentView";
-import { AppState } from "./appState"; // global store functions
-
-function App() {
-  // Initialize state once
-  const [state] = useState(new AppState());
-
-  return (
-    <div>
-      <ContentView state={state} />
-    </div>
-  );
-}
-
-export default App;
-import { useState } from "react";
-import InvoiceView from "./InvoiceView";
-import VoucherView from "./VoucherView";
-import AccountManager from "./AccountManager";
-import AccountLedger from "./AccountLedger";
-import SettingsModal from "./SettingsModal";
-
-function ContentView({ state }) {
-  const [showSettings, setShowSettings] = useState(false);
-  const [selectedView, setSelectedView] = useState(null);
-
-  const DashboardCard = ({ title, desc, color, onClick }) => (
-    <div
-      style={{
-        background: color,
-        borderRadius: "20px",
-        padding: "20px",
-        color: "white",
-        cursor: "pointer",
-        boxShadow: "0 5px 10px rgba(0,0,0,0.2)"
-      }}
-      onClick={onClick}
-    >
-      <h3>{title}</h3>
-      <p>{desc}</p>
-    </div>
-  );
-
-  if (selectedView === "invoice") return <InvoiceView state={state} />;
-  if (selectedView === "voucher") return <VoucherView state={state} />;
-  if (selectedView === "accounts") return <AccountManager state={state} />;
-  if (selectedView === "reports") return <AccountLedger state={state} />;
-
-  return (
-    <div>
-      <header style={{ display: "flex", justifyContent: "space-between", padding: "20px" }}>
-        <div>
-          <span style={{ fontSize: "10px", fontWeight: "bold", color: "blue" }}>
-            MANAGEMENT SYSTEM
-          </span>
-          <h2>{state.companyName || "MY BUSINESS"}</h2>
-        </div>
-        <button onClick={() => setShowSettings(true)}>⚙️</button>
-      </header>
-
-      <h4 style={{ marginLeft: "20px", color: "gray" }}>BUSINESS OPERATIONS</h4>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", padding: "20px" }}>
-        <DashboardCard title="INVOICE" desc="Sales & Purchase" color="blue" onClick={() => setSelectedView("invoice")} />
-        <DashboardCard title="VOUCHER" desc="Cash Flow" color="green" onClick={() => setSelectedView("voucher")} />
-        <DashboardCard title="ACCOUNTS" desc="Party Balance" color="orange" onClick={() => setSelectedView("accounts")} />
-        <DashboardCard title="REPORTS" desc="Audit History" color="indigo" onClick={() => setSelectedView("reports")} />
-      </div>
-
-      {showSettings && <SettingsModal state={state} onClose={() => setShowSettings(false)} />}
-    </div>
-  );
-}
-
-export default ContentView;
+import React, { useState, useEffect } from "react";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
-function InvoicePDF({ invoice, state, items }) {
-  const downloadPDF = () => {
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text(state.companyName, 20, 20);
-    doc.setFontSize(10);
-    doc.text(state.companyAddress, 20, 30);
-    doc.text(`Phone: ${state.companyPhone}`, 20, 35);
-    doc.text(`Email: ${state.companyEmail}`, 20, 40);
+// --- 1. GLOBAL STATE LOGIC ---
+const loadData = (key, defaultVal) => {
+  const data = localStorage.getItem(key);
+  return data ? JSON.parse(data) : defaultVal;
+};
 
-    doc.setFontSize(16);
-    doc.text("INVOICE", 150, 20);
+export default function SmartERP() {
+  const [accounts, setAccounts] = useState(() => loadData("stored_accounts_data", [
+    { id: '1', name: 'CASH ACCOUNT', type: 'Cash' },
+    { id: '2', name: 'WALKING CUSTOMER', type: 'Receivable' }
+  ]));
+  
+  const [transactions, setTransactions] = useState(() => loadData("stored_transactions_data", []));
+  const [selectedView, setSelectedView] = useState("dashboard");
+  const [selectedAccount, setSelectedAccount] = useState(null);
+  const [settings, setSettings] = useState(() => loadData("biz_settings", {
+    companyName: "2SMARTS PVT LIMITED",
+    address: "Flat C 11/F, Hong Kong",
+    phone: "+852 1234 5678",
+    bank: "HSBC: 123-456-789",
+    brNo: "BR-998877"
+  }));
 
-    doc.autoTable({
-      head: [["Description", "Qty", "Rate", "Total"]],
-      body: items.map(item => [
-        item.particular,
-        item.units,
-        item.rate.toFixed(2),
-        item.total.toFixed(2)
-      ]),
-      startY: 60
-    });
+  // Auto-save whenever state changes
+  useEffect(() => {
+    localStorage.setItem("stored_accounts_data", JSON.stringify(accounts));
+    localStorage.setItem("stored_transactions_data", JSON.stringify(transactions));
+    localStorage.setItem("biz_settings", JSON.stringify(settings));
+  }, [accounts, transactions, settings]);
 
-    doc.text(`Bank: ${state.bankName}`, 20, doc.lastAutoTable.finalY + 20);
-    doc.text(`Acc Name: ${state.bankAccName}`, 20, doc.lastAutoTable.finalY + 25);
-    doc.text(`Acc No: ${state.bankAccNo}`, 20, doc.lastAutoTable.finalY + 30);
-    doc.text(`SWIFT: ${state.bankSwift}`, 20, doc.lastAutoTable.finalY + 35);
+  // --- 2. COMPONENTS ---
 
-    doc.setFontSize(14);
-    doc.text(`BALANCE DUE HKD ${invoice.amount.toFixed(2)}`, 150, doc.lastAutoTable.finalY + 50);
-
-    doc.save(`${invoice.voucherNo}.pdf`);
-  };
-
-  return (
-    <div style={{ padding: "20px" }}>
-      <h2>{state.companyName}</h2>
-      <p>{state.companyAddress}</p>
-      <p>Phone: {state.companyPhone} | Email: {state.companyEmail}</p>
-      <h3 style={{ color: "blue" }}>INVOICE</h3>
-      <p>BR NO: {state.bankBRCode}</p>
-      <p>Date: {new Date(invoice.date).toLocaleDateString()}</p>
-      <p>Invoice No: {invoice.voucherNo}</p>
-
-      <h4>Bill To: {invoice.debitAccountName}</h4>
-      <h4>Ship To: Goods collected by client</h4>
-
-      <table border="1" width="100%" style={{ marginTop: "20px" }}>
-        <thead>
-          <tr>
-            <th>Description</th><th>Qty</th><th>Rate</th><th>Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map(item => (
-            <tr key={item.id}>
-              <td>{item.particular}</td>
-              <td>{item.units}</td>
-              <td>{item.rate.toFixed(2)}</td>
-              <td>{item.total.toFixed(2)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <h4 style={{ marginTop: "20px", color: "blue" }}>
-        Balance Due HKD {invoice.amount.toFixed(2)}
-      </h4>
-
-      <p>Authorized Signature for and on behalf of {state.companyName}</p>
-
-      <button onClick={downloadPDF}>Download Invoice PDF</button>
-    </div>
-  );
-}
-
-export default InvoicePDF;
-import { useState } from "react";
-import jsPDF from "jspdf";
-
-function InvoiceView({ state }) {
-  const [invoiceType, setInvoiceType] = useState("SALE");
-  const [date, setDate] = useState(new Date());
-  const [invoiceNo, setInvoiceNo] = useState("");
-  const [selectedPartyIndex, setSelectedPartyIndex] = useState(0);
-  const [items, setItems] = useState([{ id: crypto.randomUUID(), particular: "", units: 0, rate: 0 }]);
-
-  const grandTotal = items.reduce((sum, item) => sum + item.units * item.rate, 0);
-
-  const addRow = () => setItems([...items, { id: crypto.randomUUID(), particular: "", units: 0, rate: 0 }]);
-  const deleteRow = (id) => setItems(items.filter(item => item.id !== id));
-
-  const postInvoice = () => {
-    const invoice = {
-      id: crypto.randomUUID(),
-      voucherNo: invoiceNo || `${invoiceType}-INV-${Date.now()}`,
-      date,
-      debitAccountId: state.accounts[selectedPartyIndex].id,
-      debitAccountName: state.accounts[selectedPartyIndex].name,
-      creditAccountId: null,
-      creditAccountName: "",
-      amount: grandTotal,
-      narration: invoiceType,
-      type: "Invoice",
-      isInvoice: true,
-      invoiceItems: items
+  // A. Front Ledger (Dashboard)
+  const FrontLedger = () => {
+    const getBalance = (id) => {
+      return transactions.filter(tx => tx.debitAccountId === id || tx.creditAccountId === id)
+        .reduce((sum, tx) => sum + (tx.debitAccountId === id ? tx.amount : -tx.amount), 0);
     };
-    state.transactions.push(invoice);
-    localStorage.setItem("stored_transactions_data", JSON.stringify(state.transactions));
-    alert("Invoice saved!");
+
+    return (
+      <div className="ios-card bg-white p-4 rounded-2xl shadow-sm mt-4">
+        <h3 className="text-xs font-bold text-gray-400 mb-3 uppercase tracking-tighter">Front Ledger (Active Balances)</h3>
+        {accounts.slice(0, 5).map(acc => {
+          const bal = getBalance(acc.id);
+          return (
+            <div key={acc.id} onClick={() => { setSelectedAccount(acc); setSelectedView("ledger"); }} className="flex justify-between py-3 border-b border-gray-50 cursor-pointer active:bg-gray-50">
+              <div><p className="font-bold text-sm">{acc.name}</p><p className="text-[10px] text-gray-400">{acc.type}</p></div>
+              <div className="text-right">
+                <p className={`font-bold ${bal >= 0 ? 'text-green-600' : 'text-red-500'}`}>HKD {Math.abs(bal).toLocaleString()}</p>
+                <p className="text-[9px] font-bold opacity-40">{bal >= 0 ? 'DR' : 'CR'}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
   };
 
-  const shareInvoiceAsPDF = () => {
+  // B. Professional PDF Generator
+  const generateInvoicePDF = (inv) => {
     const doc = new jsPDF();
-    doc.text(`Invoice No: ${invoiceNo}`, 20, 20);
-    doc.text(`Date: ${date.toLocaleDateString()}`, 20, 30);
-    doc.text(`Party: ${state.accounts[selectedPartyIndex].name}`, 20, 40);
+    doc.setFontSize(20); doc.setTextColor(0, 122, 255);
+    doc.text(settings.companyName, 15, 20);
+    
+    doc.setFontSize(9); doc.setTextColor(100);
+    doc.text(settings.address, 15, 27);
+    doc.text(`Phone: ${settings.phone} | BR: ${settings.brNo}`, 15, 32);
+    
+    doc.setDrawColor(200); doc.line(15, 36, 195, 36);
+    
+    doc.setFontSize(12); doc.setTextColor(0);
+    doc.text(`INVOICE TO: ${inv.debitAccountName}`, 15, 45);
+    doc.text(`Voucher: ${inv.voucherNo}`, 140, 45);
+    doc.text(`Date: ${new Date(inv.date).toLocaleDateString()}`, 140, 51);
+
+    const tableRows = inv.invoiceItems.map(item => [
+      item.particular,
+      item.units,
+      item.rate.toFixed(2),
+      (item.units * item.rate).toFixed(2)
+    ]);
+
     doc.autoTable({
-      head: [["Item", "Qty", "Rate", "Total"]],
-      body: items.map(i => [i.particular, i.units, i.rate.toFixed(2), (i.units * i.rate).toFixed(2)])
+      startY: 60,
+      head: [['Description', 'Qty', 'Rate', 'Total']],
+      body: tableRows,
+      theme: 'grid',
+      headStyles: { fillColor: [0, 122, 255] }
     });
-    doc.text(`Grand Total: ${grandTotal.toFixed(2)}`, 20, doc.lastAutoTable.finalY + 20);
-    doc.save(`${invoiceNo}.pdf`);
+
+    const finalY = doc.lastAutoTable.finalY + 10;
+    doc.setFont("helvetica", "bold");
+    doc.text(`NET TOTAL: HKD ${inv.amount.toLocaleString()}`, 140, finalY);
+    
+    doc.setFontSize(8); doc.setFont("helvetica", "normal");
+    doc.text(`Bank Details: ${settings.bank}`, 15, finalY + 15);
+    doc.text("Authorized Signature: ____________________", 130, finalY + 30);
+    
+    doc.save(`${inv.voucherNo}.pdf`);
   };
 
+  // C. Invoice View (With Navigation & Fixes)
+  const InvoiceUI = () => {
+    const [invType, setInvType] = useState("SALE");
+    const [items, setItems] = useState([{ id: 1, particular: "", units: 0, rate: 0 }]);
+    const [partyId, setPartyId] = useState(accounts[0]?.id);
+    const [vNo, setVNo] = useState(`INV-${Date.now()}`);
+
+    const total = items.reduce((s, i) => s + (i.units * i.rate), 0);
+
+    const postInvoice = () => {
+      const party = accounts.find(a => a.id === partyId);
+      const newTx = {
+        id: crypto.randomUUID(),
+        voucherNo: vNo,
+        date: new Date().toISOString(),
+        debitAccountId: invType === "SALE" ? partyId : "PURCHASE-ACC", // Proper balancing account
+        creditAccountId: invType === "SALE" ? "SALES-ACC" : partyId,
+        debitAccountName: party.name,
+        amount: total,
+        invoiceItems: items,
+        isInvoice: true
+      };
+      setTransactions([...transactions, newTx]);
+      alert("Invoice Posted!");
+      setSelectedView("dashboard");
+    };
+
+    return (
+      <div className="p-4 space-y-4">
+        <div className="flex bg-gray-200 p-1 rounded-xl">
+            <button onClick={() => setInvType("SALE")} className={`flex-1 py-2 rounded-lg font-bold ${invType === "SALE" ? 'bg-white shadow' : ''}`}>SALE</button>
+            <button onClick={() => setInvType("PURCHASE")} className={`flex-1 py-2 rounded-lg font-bold ${invType === "PURCHASE" ? 'bg-white shadow' : ''}`}>PURCHASE</button>
+        </div>
+        
+        <div className="bg-white p-4 rounded-xl shadow-sm space-y-3">
+            <input type="text" value={vNo} readOnly className="bg-gray-50 text-blue-600 font-mono font-bold p-2 rounded w-full" />
+            <select value={partyId} onChange={e => setPartyId(e.target.value)} className="w-full p-3 bg-gray-100 rounded-lg font-bold">
+                {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
+            </select>
+        </div>
+
+        {items.map((item, idx) => (
+            <div key={item.id} className="flex gap-2 items-center bg-white p-2 rounded-lg">
+                <input placeholder="Item" className="flex-1 text-sm outline-none" onChange={e => {
+                    const newItems = [...items]; newItems[idx].particular = e.target.value; setItems(newItems);
+                }} />
+                <input type="number" placeholder="Qty" className="w-12 text-center text-sm outline-none" onChange={e => {
+                    const newItems = [...items]; newItems[idx].units = Number(e.target.value); setItems(newItems);
+                }} />
+                <input type="number" placeholder="Rate" className="w-20 text-right font-bold text-sm outline-none" onChange={e => {
+                    const newItems = [...items]; newItems[idx].rate = Number(e.target.value); setItems(newItems);
+                }} />
+            </div>
+        ))}
+        <button onClick={() => setItems([...items, { id: Date.now(), particular: "", units: 0, rate: 0 }])} className="w-full py-2 border-2 border-dashed rounded-xl text-gray-400 font-bold">+ Add Line</button>
+        
+        <div className="bg-black text-white p-4 rounded-xl flex justify-between">
+            <span className="text-xs uppercase opacity-50">Total</span>
+            <span className="text-xl font-bold">HKD {total.toLocaleString()}</span>
+        </div>
+        
+        <button onClick={postInvoice} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold text-lg">POST TRANSACTION</button>
+      </div>
+    );
+  };
+
+  // --- 3. MAIN RENDER ---
   return (
-    <div>
-      <h2>{invoiceType} Invoice</h2>
-      <input type="date" value={date.toISOString().split("T")[0]} onChange={e => setDate(new Date(e.target.value))} />
-      <select value={selectedPartyIndex} onChange={e => setSelectedPartyIndex(Number(e.target.value))}>
-        {state.accounts.map((acc, i) => <option key={acc.id} value={i}>{acc.name}</option>)}
-      </select>
+    <div className="min-h-screen bg-[#F2F2F7] pb-24">
+      {/* Header */}
+      <header className="p-5 bg-white flex justify-between items-center border-b">
+        <div>
+            <p className="text-[10px] font-black text-blue-600">2SMART ERP PRO</p>
+            <h1 className="text-xl font-black">{settings.companyName}</h1>
+        </div>
+        <button onClick={() => setSelectedView("settings")} className="text-xl">⚙️</button>
+      </header>
 
-      <table>
-        <thead>
-          <tr><th>Item</th><th>Qty</th><th>Rate</th><th>Total</th><th>Actions</th></tr>
-        </thead>
-        <tbody>
-          {items.map(item => (
-            <tr key={item.id}>
-              <td><input value={item.particular} onChange={e => item.particular = e.target.value} /></td>
-              <td><input type="number" value={item.units} onChange={e => item.units = Number(e.target.value)} /></td>
-              <td><input type="number" value={item.rate} onChange={e => item.rate = Number(e.target.value)} /></td>
-              <td>{(item.units * item.rate).toFixed(2)}</td>
-              <td><button onClick={() => deleteRow(item.id)}>Delete</button></td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <button onClick={addRow}>Add Row</button>
+      {/* Conditional Rendering */}
+      {selectedView === "dashboard" && (
+        <div className="p-4">
+            <div className="grid grid-cols-2 gap-4">
+                <div onClick={() => setSelectedView("invoice")} className="bg-white p-6 rounded-3xl text-center shadow-sm cursor-pointer border-b-4 border-blue-500">
+                    <span className="text-3xl">📝</span><p className="text-[10px] font-bold mt-2">INVOICE</p>
+                </div>
+                <div onClick={() => setSelectedView("accounts")} className="bg-white p-6 rounded-3xl text-center shadow-sm cursor-pointer border-b-4 border-orange-500">
+                    <span className="text-3xl">👥</span><p className="text-[10px] font-bold mt-2">PARTIES</p>
+                </div>
+            </div>
+            <FrontLedger />
+        </div>
+      )}
 
-      <h3>Total: {grandTotal.toFixed(2)}</h3>
-      <button onClick={postInvoice}>Post Invoice</button>
-      <button onClick={shareInvoiceAsPDF}>Download PDF</button>
+      {selectedView === "invoice" && <InvoiceUI />}
+      
+      {/* Footer Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t flex justify-around py-4">
+        <button onClick={() => setSelectedView("dashboard")} className={selectedView === 'dashboard' ? 'text-blue-600' : 'text-gray-400'}>🏠</button>
+        <button onClick={() => setSelectedView("invoice")} className={selectedView === 'invoice' ? 'text-blue-600' : 'text-gray-400'}>📄</button>
+        <button onClick={() => setSelectedView("reports")} className={selectedView === 'reports' ? 'text-blue-600' : 'text-gray-400'}>📊</button>
+      </nav>
     </div>
   );
-}
-
-export default InvoiceView;
-function resetToNew() {
-  setCurrentIndex(0);
-  setItems([{ id: crypto.randomUUID(), particular: "", units: 0, rate: 0 }]);
-  updateInv();
-}
-
-function addRow(afterId) {
-  const idx = items.findIndex(i => i.id === afterId);
-  const newItem = { id: crypto.randomUUID(), particular: "", units: 0, rate: 0 };
-  const newItems = [...items];
-  newItems.splice(idx + 1, 0, newItem);
-  setItems(newItems);
-}
-
-function deleteRow(id) {
-  if (items.length > 1) {
-    setItems(items.filter(i => i.id !== id));
-  }
-}
-
-function postInvoice() {
-  const party = state.accounts[selectedPartyIndex];
-  const newTx = {
-    id: crypto.randomUUID(),
-    voucherNo: invoiceNo,
-    date,
-    debitAccountId: invoiceType === "SALE" ? party.id : crypto.randomUUID(),
-    creditAccountId: invoiceType === "SALE" ? crypto.randomUUID() : party.id,
-    debitAccountName: party.name,
-    creditAccountName: party.name,
-    amount: grandTotal,
-    narration: `${invoiceType}: ${invoiceNo}`,
-    isInvoice: true,
-    invoiceItems: items
-  };
-
-  if (currentIndex === 0) {
-    state.transactions.push(newTx);
-    resetToNew();
-  } else {
-    state.transactions[currentIndex - 1] = newTx;
-  }
-  localStorage.setItem("stored_transactions_data", JSON.stringify(state.transactions));
-}
-
-function deleteInvoice() {
-  if (currentIndex !== 0) {
-    const idToDelete = state.transactions[currentIndex - 1].id;
-    state.transactions = state.transactions.filter(tx => tx.id !== idToDelete);
-    resetToNew();
-  }
-}
-
-function navigate(d) {
-  const invs = state.transactions.filter(tx => tx.isInvoice && tx.narration.includes(invoiceType));
-  let newIdx = (currentIndex === 0 ? invs.length + 1 : currentIndex) + d;
-  if (newIdx > 0 && newIdx <= invs.length) {
-    const inv = invs[newIdx - 1];
-    setCurrentIndex(newIdx);
-    setInvoiceNo(inv.voucherNo);
-    setItems(inv.invoiceItems || []);
-    setDate(new Date(inv.date));
-    const pIdx = state.accounts.findIndex(acc => acc.id === inv.debitAccountId || acc.id === inv.creditAccountId);
-    setSelectedPartyIndex(pIdx);
-  } else if (newIdx > invs.length) {
-    resetToNew();
-  }
-}
-function postInvoice() {
-  const party = state.accounts[selectedPartyIndex];
-  const newTx = {
-    id: crypto.randomUUID(),
-    voucherNo: invoiceNo,
-    date,
-    debitAccountId: invoiceType === "SALE" ? party.id : crypto.randomUUID(),
-    creditAccountId: invoiceType === "SALE" ? crypto.randomUUID() : party.id,
-    debitAccountName: party.name,
-    creditAccountName: party.name,
-    amount: grandTotal,
-    narration: `${invoiceType}: ${invoiceNo}`,
-    isInvoice: true,
-    invoiceItems: items
-  };
-  if (currentIndex === 0) {
-    state.transactions.push(newTx);
-    resetToNew();
-  } else {
-    state.transactions[currentIndex - 1] = newTx;
-  }
-  localStorage.setItem("stored_transactions_data", JSON.stringify(state.transactions));
-}
-function shareInvoiceAsPDF() {
-  const doc = new jsPDF();
-  doc.text(`Invoice No: ${invoiceNo}`, 20, 20);
-  doc.text(`Date: ${date.toLocaleDateString()}`, 20, 30);
-  doc.text(`Party: ${state.accounts[selectedPartyIndex].name}`, 20, 40);
-  doc.autoTable({
-    head: [["Item", "Qty", "Rate", "Total"]],
-    body: items.map(i => [i.particular, i.units, i.rate.toFixed(2), (i.units * i.rate).toFixed(2)])
-  });
-  doc.text(`Grand Total: ${grandTotal.toFixed(2)}`, 20, doc.lastAutoTable.finalY + 20);
-  doc.save(`${invoiceNo}.pdf`);
 }
