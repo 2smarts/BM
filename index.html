@@ -725,6 +725,39 @@
     // App Init
     switchView('dashboard');
 
+    // Party ka naam change karne ke liye
+    function editParty(pid) {
+        const p = db.parties.find(x => x.id === pid);
+        const newName = prompt("Naya Party Name likhein:", p.name);
+        if(newName && newName.trim() !== "") {
+            p.name = newName.toUpperCase().trim();
+            saveData();
+            renderAccounts();
+            alert("Party Name Update ho gaya!");
+        }
+    }
+
+    // Party delete karne ke liye (sirf tab jab entries na hon)
+    function deleteParty(pid) {
+        if(confirm("Kya aap waqai is party ko delete karna chahte hain? Ye wapis nahi ayegi.")) {
+            db.parties = db.parties.filter(p => p.id !== pid);
+            saveData();
+            renderAccounts();
+        }
+    }
+
+    // Dropdowns (Sale/Voucher) ko update karne ke liye agar aapne naam change kiya ho
+    function loadParties(elementId) {
+        let html = '<option value="">Select Party</option>';
+        // Alphabetical order mein dikhane ke liye sort
+        const sortedParties = [...db.parties].sort((a,b) => a.name.localeCompare(b.name));
+        sortedParties.forEach(p => {
+            html += `<option value="${p.id}">${p.name}</option>`;
+        });
+        const el = document.getElementById(elementId);
+        if(el) el.innerHTML = html;
+    }
+
 </script>
 </body>
 </html>
