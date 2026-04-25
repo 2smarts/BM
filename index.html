@@ -3,91 +3,210 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Business Management System</title>
+    <title>2Smart Management System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* iPhone jaisa feel dene ke liye custom CSS */
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f2f2f7;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .ios-card {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        }
+        body { font-family: -apple-system, system-ui, sans-serif; background: #f2f2f7; }
+        .ios-tab { cursor: pointer; transition: 0.2s; }
+        .ios-tab:active { transform: scale(0.95); }
+        .hidden { display: none; }
+        input, select { border: 1px solid #ddd; padding: 8px; border-radius: 8px; width: 100%; }
+        .pdf-page { width: 595px; height: 842px; background: white; padding: 40px; margin: auto; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
 
-<div id="app">
+<div id="app" class="pb-24">
+    <div class="p-6 bg-white shadow-sm sticky top-0 z-50">
+        <h1 id="view-title" class="text-2xl font-black text-gray-900">Dashboard</h1>
     </div>
 
-<script>
-// --- DATA STORAGE & STATE (Aapka AppState logic) ---
-const State = {
-    accounts: JSON.parse(localStorage.getItem('accounts')) || [],
-    transactions: JSON.parse(localStorage.getItem('transactions')) || [],
-    config: JSON.parse(localStorage.getItem('config')) || {
-        companyName: "MY BUSINESS",
-        companyAddress: "Office 123, Tower A",
-        companyPhone: "+852 XXXX XXXX",
-        companyEmail: "info@business.com",
-        bankName: "HSBC",
-        bankAccName: "Business Ltd",
-        bankAccNo: "123-456789-001",
-        bankSwift: "HSBC HK HHH",
-        bankBRCode: "BR12345"
-    },
-
-    save() {
-        localStorage.setItem('accounts', JSON.stringify(this.accounts));
-        localStorage.setItem('transactions', JSON.stringify(this.transactions));
-        localStorage.setItem('config', JSON.stringify(this.config));
-    }
-};
-
-// --- INITIAL UI RENDER ---
-function init() {
-    const app = document.getElementById('app');
-    app.innerHTML = `
-        <div class="p-6">
-            <h1 class="text-xs font-black text-blue-600 tracking-widest uppercase">Management System</h1>
-            <h2 class="text-3xl font-black text-gray-900 mb-6">${State.config.companyName.toUpperCase()}</h2>
-            
-            <div class="grid grid-cols-2 gap-4">
-                <div onclick="alert('Invoices Open')" class="ios-card p-4 bg-gradient-to-br from-blue-500 to-blue-600 text-white cursor-pointer">
-                    <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mb-4">📄</div>
-                    <div class="font-black text-sm">INVOICE</div>
-                    <div class="text-[10px] opacity-70 font-medium">Sales & Purchase</div>
-                </div>
-                
-                <div onclick="alert('Vouchers Open')" class="ios-card p-4 bg-gradient-to-br from-green-500 to-green-600 text-white cursor-pointer">
-                    <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mb-4">💰</div>
-                    <div class="font-black text-sm">VOUCHER</div>
-                    <div class="text-[10px] opacity-70 font-medium">Cash Flow</div>
-                </div>
-
-                <div onclick="alert('Accounts Open')" class="ios-card p-4 bg-gradient-to-br from-orange-500 to-orange-600 text-white cursor-pointer">
-                    <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mb-4">👤</div>
-                    <div class="font-black text-sm">ACCOUNTS</div>
-                    <div class="text-[10px] opacity-70 font-medium">Party Balance</div>
-                </div>
-
-                <div onclick="alert('Reports Open')" class="ios-card p-4 bg-gradient-to-br from-indigo-500 to-indigo-600 text-white cursor-pointer">
-                    <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mb-4">📊</div>
-                    <div class="font-black text-sm">REPORTS</div>
-                    <div class="text-[10px] opacity-70 font-medium">Audit History</div>
-                </div>
+    <div id="view-content" class="p-4">
+        <div id="view-dashboard" class="grid grid-cols-2 gap-4">
+            <div onclick="showView('invoice')" class="ios-tab p-5 bg-blue-600 text-white rounded-3xl shadow-lg">
+                <span class="text-2xl">📄</span>
+                <div class="font-bold mt-2">INVOICE</div>
+                <div class="text-[10px] opacity-80 uppercase tracking-tighter">Sales / Purchase</div>
+            </div>
+            <div onclick="showView('voucher')" class="ios-tab p-5 bg-purple-600 text-white rounded-3xl shadow-lg">
+                <span class="text-2xl">💰</span>
+                <div class="font-bold mt-2">VOUCHER</div>
+                <div class="text-[10px] opacity-80 uppercase tracking-tighter">Receipt / Payment</div>
+            </div>
+            <div onclick="showView('accounts')" class="ios-tab p-5 bg-orange-500 text-white rounded-3xl shadow-lg">
+                <span class="text-2xl">👤</span>
+                <div class="font-bold mt-2">ACCOUNTS</div>
+                <div class="text-[10px] opacity-80 uppercase tracking-tighter">Party Ledger</div>
+            </div>
+            <div onclick="showView('settings')" class="ios-tab p-5 bg-gray-700 text-white rounded-3xl shadow-lg">
+                <span class="text-2xl">⚙️</span>
+                <div class="font-bold mt-2">SETTINGS</div>
+                <div class="text-[10px] opacity-80 uppercase tracking-tighter">Company Profile</div>
             </div>
         </div>
-    `;
-}
 
-// App start karein
-init();
+        <div id="view-invoice" class="hidden space-y-4">
+            <div class="flex gap-2 mb-4">
+                <button onclick="setInvType('SALE')" id="btn-sale" class="flex-1 p-2 rounded-lg font-bold bg-blue-600 text-white">SALE</button>
+                <button onclick="setInvType('PURCHASE')" id="btn-purchase" class="flex-1 p-2 rounded-lg font-bold bg-gray-200">PURCHASE</button>
+            </div>
+            <div class="bg-white p-4 rounded-2xl space-y-3">
+                <input type="text" id="inv-no" placeholder="Invoice No" readonly class="bg-gray-50">
+                <input type="date" id="inv-date">
+                <select id="inv-party"></select>
+            </div>
+            <div id="items-list" class="space-y-2">
+                </div>
+            <button onclick="addInvRow()" class="w-full p-2 border-2 border-dashed border-blue-400 text-blue-600 rounded-xl font-bold">+ Add Item</button>
+            <div class="p-4 bg-blue-50 rounded-2xl flex justify-between items-center">
+                <span class="font-bold">TOTAL HKD:</span>
+                <span id="inv-total" class="text-xl font-black text-blue-700">0.00</span>
+            </div>
+            <button onclick="postInvoice()" class="w-full p-4 bg-green-600 text-white rounded-2xl font-black shadow-lg">POST INVOICE</button>
+        </div>
+
+        <div id="view-voucher" class="hidden space-y-4">
+            <div class="flex gap-2 mb-4">
+                <button onclick="setVouType('RECEIPT')" id="btn-rct" class="flex-1 p-2 rounded-lg font-bold bg-purple-600 text-white">RECEIPT</button>
+                <button onclick="setVouType('PAYMENT')" id="btn-pay" class="flex-1 p-2 rounded-lg font-bold bg-gray-200">PAYMENT</button>
+            </div>
+            <div class="bg-white p-4 rounded-2xl space-y-3 shadow-sm">
+                <input type="text" id="vou-no" readonly class="bg-gray-50">
+                <input type="date" id="vou-date">
+                <select id="vou-party"></select>
+                <input type="number" id="vou-amount" placeholder="Amount (HKD)" class="text-2xl font-bold text-blue-600">
+                <input type="text" id="vou-narration" placeholder="Enter Remarks / Narration">
+            </div>
+            <button onclick="postVoucher()" class="w-full p-4 bg-purple-700 text-white rounded-2xl font-black shadow-lg">POST VOUCHER</button>
+        </div>
+    </div>
+
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around p-3 pb-6 shadow-2xl">
+        <button onclick="showView('dashboard')" class="text-center">
+            <div class="text-xl">🏠</div><div class="text-[10px] font-bold">Home</div>
+        </button>
+        <button onclick="showView('invoice')" class="text-center">
+            <div class="text-xl">📄</div><div class="text-[10px] font-bold">Invoices</div>
+        </button>
+        <button onclick="showView('voucher')" class="text-center">
+            <div class="text-xl">💰</div><div class="text-[10px] font-bold">Vouchers</div>
+        </button>
+        <button onclick="showView('accounts')" class="text-center">
+            <div class="text-xl">👤</div><div class="text-[10px] font-bold">Accounts</div>
+        </button>
+    </div>
+</div>
+
+<script>
+    // --- DATABASE & STATE ---
+    let state = {
+        accounts: JSON.parse(localStorage.getItem('accounts')) || [{id: '1', name: 'Cash'}, {id: '2', name: 'Walking Customer'}],
+        transactions: JSON.parse(localStorage.getItem('transactions')) || [],
+        config: JSON.parse(localStorage.getItem('config')) || { companyName: "2Smart Limited" }
+    };
+
+    let currentInvType = 'SALE';
+    let currentVouType = 'RECEIPT';
+
+    function save() {
+        localStorage.setItem('accounts', JSON.stringify(state.accounts));
+        localStorage.setItem('transactions', JSON.stringify(state.transactions));
+    }
+
+    // --- NAVIGATION ---
+    function showView(viewId) {
+        document.querySelectorAll('#view-content > div').forEach(div => div.classList.add('hidden'));
+        document.getElementById('view-' + viewId).classList.remove('hidden');
+        document.getElementById('view-title').innerText = viewId.toUpperCase();
+        
+        if(viewId === 'invoice') updateInvUI();
+        if(viewId === 'voucher') updateVouUI();
+        loadPartyDropdowns();
+    }
+
+    function loadPartyDropdowns() {
+        const selects = ['inv-party', 'vou-party'];
+        selects.forEach(id => {
+            const el = document.getElementById(id);
+            el.innerHTML = state.accounts.map(acc => `<option value="${acc.id}">${acc.name}</option>`).join('');
+        });
+    }
+
+    // --- INVOICE LOGIC ---
+    let invItems = [];
+    function setInvType(t) {
+        currentInvType = t;
+        document.getElementById('btn-sale').className = t === 'SALE' ? 'flex-1 p-2 rounded-lg font-bold bg-blue-600 text-white' : 'flex-1 p-2 rounded-lg font-bold bg-gray-200';
+        document.getElementById('btn-purchase').className = t === 'PURCHASE' ? 'flex-1 p-2 rounded-lg font-bold bg-orange-600 text-white' : 'flex-1 p-2 rounded-lg font-bold bg-gray-200';
+        updateInvUI();
+    }
+
+    function updateInvUI() {
+        const prefix = currentInvType === 'SALE' ? 'INV' : 'PUR';
+        const count = state.transactions.filter(t => t.isInvoice && t.narration.includes(currentInvType)).length;
+        document.getElementById('inv-no').value = `${prefix}-${String(count + 1).padStart(4, '0')}`;
+        document.getElementById('inv-date').valueAsDate = new Date();
+    }
+
+    function addInvRow() {
+        const div = document.createElement('div');
+        div.className = "flex gap-2 bg-white p-2 rounded-lg shadow-sm";
+        div.innerHTML = `
+            <input type="text" placeholder="Item" class="flex-1">
+            <input type="number" placeholder="Qty" class="w-16 text-center" oninput="calcTotal()">
+            <input type="number" placeholder="Rate" class="w-20 text-right" oninput="calcTotal()">
+        `;
+        document.getElementById('items-list').appendChild(div);
+    }
+
+    function calcTotal() {
+        let total = 0;
+        document.querySelectorAll('#items-list > div').forEach(row => {
+            const qty = row.querySelectorAll('input')[1].value || 0;
+            const rate = row.querySelectorAll('input')[2].value || 0;
+            total += qty * rate;
+        });
+        document.getElementById('inv-total').innerText = total.toFixed(2);
+    }
+
+    // --- VOUCHER LOGIC ---
+    function setVouType(t) {
+        currentVouType = t;
+        document.getElementById('btn-rct').className = t === 'RECEIPT' ? 'flex-1 p-2 rounded-lg font-bold bg-purple-600 text-white' : 'flex-1 p-2 rounded-lg font-bold bg-gray-200';
+        document.getElementById('btn-pay').className = t === 'PAYMENT' ? 'flex-1 p-2 rounded-lg font-bold bg-red-600 text-white' : 'flex-1 p-2 rounded-lg font-bold bg-gray-200';
+        updateVouUI();
+    }
+
+    function updateVouUI() {
+        const prefix = currentVouType === 'RECEIPT' ? 'RCT' : 'PAY';
+        const count = state.transactions.filter(t => !t.isInvoice && t.voucherNo.startsWith(prefix)).length;
+        document.getElementById('vou-no').value = `${prefix}-${String(count + 1).padStart(4, '0')}`;
+        document.getElementById('vou-date').valueAsDate = new Date();
+    }
+
+    function postVoucher() {
+        const amount = parseFloat(document.getElementById('vou-amount').value);
+        if(!amount) return alert("Amount dalein!");
+
+        const newVou = {
+            id: Date.now(),
+            voucherNo: document.getElementById('vou-no').value,
+            date: document.getElementById('vou-date').value,
+            amount: amount,
+            narration: document.getElementById('vou-narration').value,
+            isInvoice: false,
+            partyId: document.getElementById('vou-party').value
+        };
+
+        state.transactions.push(newVou);
+        save();
+        alert("Voucher Saved!");
+        showView('dashboard');
+    }
+
+    // Init App
+    showView('dashboard');
+    addInvRow(); // Start with one row
 </script>
 
 </body>
