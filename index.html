@@ -3,272 +3,401 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2Smart Ultra ERP</title>
+    <title>2Smart Pro ERP</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <style>
-        :root { --ios-blue: #007AFF; --ios-bg: #F2F2F7; }
-        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: #1C1C1E; overflow-x: hidden; }
-        .ios-card { background: white; border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 16px; }
-        .btn-action { transition: transform 0.1s; cursor: pointer; }
-        .btn-action:active { transform: scale(0.96); }
-        .tab-active { color: var(--ios-blue); font-weight: bold; }
-        .hidden { display: none; }
-        input, select { border-radius: 10px; background: #E9E9EB; padding: 12px; width: 100%; border: none; outline: none; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #F2F2F7; color: #1C1C1E; margin: 0; padding: 0; }
+        .ios-card { background: #FFFFFF; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .ios-input { background: #F2F2F7; border-radius: 8px; padding: 12px; border: none; width: 100%; outline: none; font-size: 14px; margin-bottom: 10px; }
+        .ios-btn { border-radius: 10px; font-weight: 600; padding: 14px; text-align: center; width: 100%; transition: opacity 0.2s; cursor: pointer; }
+        .ios-btn:active { opacity: 0.7; }
         
-        /* Front Ledger Specific */
-        .ledger-row { display: grid; grid-template-columns: 1fr 80px 80px 100px; gap: 5px; font-size: 11px; padding: 10px 0; border-bottom: 0.5px solid #E5E5EA; }
+        #app-shell { display: flex; flex-direction: column; min-height: 100vh; max-width: 600px; margin: 0 auto; background: #F2F2F7; position: relative; padding-bottom: 80px; }
+        
+        /* Tab Bar */
+        .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-top: 1px solid #E5E5EA; display: flex; justify-content: space-around; padding: 10px 0 20px 0; z-index: 50; max-width: 600px; margin: 0 auto; }
+        .tab-item { display: flex; flex-direction: column; align-items: center; color: #8E8E93; font-size: 10px; font-weight: 600; width: 25%; cursor: pointer; }
+        .tab-item.active { color: #007AFF; }
+        .tab-icon { font-size: 22px; margin-bottom: 2px; }
+
+        /* Segmented Control */
+        .segmented-control { display: flex; background: #E5E5EA; border-radius: 8px; padding: 2px; margin-bottom: 15px; }
+        .segment { flex: 1; text-align: center; padding: 8px 0; font-size: 13px; font-weight: 600; color: #000; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+        .segment.active { background: #FFF; box-shadow: 0 1px 3px rgba(0,0,0,0.12); color: #007AFF; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 8px; font-size: 11px; color: #8E8E93; border-bottom: 1px solid #E5E5EA; text-transform: uppercase; }
+        td { padding: 12px 8px; font-size: 12px; border-bottom: 1px solid #E5E5EA; }
+        
+        .hidden-view { display: none !important; }
     </style>
 </head>
-<body class="pb-24">
+<body>
 
-<div id="app">
-    <header class="sticky top-0 bg-white/80 backdrop-blur-md border-b p-4 z-50 flex justify-between items-center">
-        <div id="back-nav" class="hidden text-blue-600 font-bold cursor-pointer" onclick="goBack()">❮ Back</div>
-        <h1 id="screen-title" class="text-xl font-black">2Smart Home</h1>
-        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">2S</div>
+<div id="app-shell">
+    
+    <header class="bg-white/90 backdrop-blur border-b border-gray-200 px-4 py-4 sticky top-0 z-40 flex justify-between items-center">
+        <h1 id="nav-title" class="text-xl font-black text-blue-600 tracking-tight">2Smart System</h1>
+        <button onclick="switchView('settings')" class="text-gray-600 text-2xl hover:text-blue-500 transition">⚙️</button>
     </header>
 
-    <main class="p-4 space-y-6">
+    <div id="main-content" class="p-4">
         
-        <section id="view-dashboard" class="space-y-4">
-            <div class="ios-card bg-gradient-to-br from-blue-600 to-blue-800 text-white">
-                <p class="text-[10px] opacity-70 uppercase font-bold tracking-widest">Total Net Balance</p>
-                <h2 id="total-cash" class="text-3xl font-black italic">HKD 0.00</h2>
+        <div id="view-dashboard" class="space-y-4">
+            <div class="ios-card p-6 bg-gradient-to-br from-gray-900 to-black text-white shadow-lg">
+                <p class="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-1">Company Net Balance</p>
+                <h3 id="dash-net-bal" class="text-4xl font-black text-blue-400">HKD 0.00</h3>
             </div>
 
-            <div class="ios-card">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-black text-sm uppercase text-gray-400">Front Ledger (Top Balances)</h3>
-                    <button onclick="switchView('accounts')" class="text-xs text-blue-600 font-bold">See All</button>
+            <h2 class="text-xs font-bold text-gray-500 uppercase mt-4 ml-1 tracking-wider">Quick Actions</h2>
+            <div class="grid grid-cols-2 gap-3">
+                <div onclick="switchView('invoice')" class="ios-card p-4 cursor-pointer border-l-4 border-blue-500 active:scale-95 transition-transform">
+                    <div class="text-2xl mb-1">📝</div>
+                    <div class="font-bold text-sm text-gray-800">Invoices</div>
+                    <div class="text-[10px] text-gray-400">Create Bill / PDF</div>
                 </div>
-                <div id="front-ledger-list" class="space-y-3">
-                    </div>
+                <div onclick="switchView('voucher')" class="ios-card p-4 cursor-pointer border-l-4 border-green-500 active:scale-95 transition-transform">
+                    <div class="text-2xl mb-1">💸</div>
+                    <div class="font-bold text-sm text-gray-800">Receipt & Pay</div>
+                    <div class="text-[10px] text-gray-400">Cash In/Out</div>
+                </div>
+                <div onclick="switchView('accounts-manager')" class="ios-card p-4 cursor-pointer border-l-4 border-orange-500 active:scale-95 transition-transform">
+                    <div class="text-2xl mb-1">👥</div>
+                    <div class="font-bold text-sm text-gray-800">Account Manager</div>
+                    <div class="text-[10px] text-gray-400">Add/Edit Parties</div>
+                </div>
+                <div onclick="switchView('ledgers')" class="ios-card p-4 cursor-pointer border-l-4 border-purple-500 active:scale-95 transition-transform">
+                    <div class="text-2xl mb-1">📊</div>
+                    <div class="font-bold text-sm text-gray-800">View Ledgers</div>
+                    <div class="text-[10px] text-gray-400">Party Statements</div>
+                </div>
             </div>
+        </div>
 
-            <div class="grid grid-cols-2 gap-4">
-                <div onclick="switchView('invoice')" class="ios-card flex flex-col items-center btn-action border-b-4 border-blue-500">
-                    <span class="text-3xl mb-1">📝</span>
-                    <span class="font-bold text-xs uppercase">New Invoice</span>
+        <div id="view-accounts-manager" class="hidden-view space-y-4">
+            <div class="ios-card p-4">
+                <h3 class="text-sm font-black text-gray-700 mb-3">ADD NEW PARTY</h3>
+                <input type="text" id="new-acc-name" placeholder="Party Name" class="ios-input">
+                <div class="segmented-control">
+                    <div id="type-rec" onclick="setNewAccType('Receivable')" class="segment active">Customer (Receivable)</div>
+                    <div id="type-pay" onclick="setNewAccType('Payable')" class="segment">Supplier (Payable)</div>
                 </div>
-                <div onclick="switchView('voucher')" class="ios-card flex flex-col items-center btn-action border-b-4 border-green-500">
-                    <span class="text-3xl mb-1">💸</span>
-                    <span class="font-bold text-xs uppercase">Vouchers</span>
-                </div>
-                <div onclick="switchView('history')" class="ios-card flex flex-col items-center btn-action border-b-4 border-purple-500">
-                    <span class="text-3xl mb-1">🕰️</span>
-                    <span class="font-bold text-xs uppercase">History</span>
-                </div>
-                <div onclick="switchView('settings')" class="ios-card flex flex-col items-center btn-action border-b-4 border-gray-500">
-                    <span class="text-3xl mb-1">⚙️</span>
-                    <span class="font-bold text-xs uppercase">Settings</span>
-                </div>
+                <button onclick="addAccount()" class="ios-btn bg-orange-500 text-white">Save Account</button>
             </div>
-        </section>
+        </div>
 
-        <section id="view-invoice" class="hidden space-y-4">
-            <div class="flex bg-gray-200 p-1 rounded-xl">
-                <button id="type-sale" onclick="toggleInvType('SALE')" class="flex-1 py-2 rounded-lg font-bold bg-white shadow-sm">SALE</button>
-                <button id="type-pur" onclick="toggleInvType('PURCHASE')" class="flex-1 py-2 rounded-lg font-bold">PURCHASE</button>
-            </div>
-            <div class="ios-card space-y-3">
-                <div class="flex justify-between items-center">
-                    <input type="text" id="inv-no" readonly class="!w-1/2 font-mono text-blue-600 font-bold bg-transparent">
-                    <input type="date" id="inv-date" class="!w-auto text-sm">
+        <div id="view-ledgers" class="hidden-view space-y-4">
+            <input type="text" id="search-acc" onkeyup="renderAccounts()" placeholder="🔍 Search Party..." class="ios-input shadow-sm bg-white">
+            <h3 class="text-xs font-bold text-gray-500 uppercase ml-1 tracking-wider">All Accounts</h3>
+            <div id="accounts-list" class="space-y-2"></div>
+        </div>
+
+        <div id="view-statement" class="hidden-view space-y-4">
+            <button onclick="switchView('ledgers')" class="text-blue-600 font-bold mb-2 text-sm">❮ Back to Ledgers</button>
+            <div class="ios-card p-5 bg-gradient-to-r from-blue-600 to-blue-800 text-white">
+                <p class="text-[10px] uppercase opacity-70 tracking-wider">Account Statement</p>
+                <h2 id="stmt-name" class="text-2xl font-black mb-2">Party Name</h2>
+                <div class="flex justify-between items-end border-t border-white/20 pt-2 mt-2">
+                    <span class="text-xs opacity-80">Net Balance</span>
+                    <h3 id="stmt-bal" class="text-xl font-bold">0.00</h3>
                 </div>
-                <select id="inv-party-select" class="font-bold text-lg"></select>
             </div>
             
-            <div id="inv-items-box" class="space-y-2"></div>
-            <button onclick="addInvRow()" class="w-full py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-400 font-bold">+ Add Item</button>
-            
-            <div class="ios-card bg-gray-900 text-white flex justify-between items-center">
-                <span class="text-xs uppercase opacity-60">Total Payable</span>
+            <div class="ios-card overflow-x-auto bg-white !p-0">
+                <table>
+                    <thead class="bg-gray-50">
+                        <tr><th>Date</th><th>Ref / Desc</th><th>Dr</th><th>Cr</th><th>Bal</th></tr>
+                    </thead>
+                    <tbody id="stmt-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="view-invoice" class="hidden-view space-y-4">
+            <div class="segmented-control">
+                <div id="inv-sale" onclick="setInvType('SALE')" class="segment active">Sales Invoice</div>
+                <div id="inv-pur" onclick="setInvType('PURCHASE')" class="segment">Purchase Bill</div>
+            </div>
+
+            <div class="ios-card p-4">
+                <div class="flex gap-2">
+                    <input type="text" id="inv-no" readonly class="ios-input font-mono text-blue-600 font-bold bg-blue-50 w-1/2">
+                    <input type="date" id="inv-date" class="ios-input w-1/2">
+                </div>
+                <select id="inv-party" class="ios-input font-bold"></select>
+            </div>
+
+            <div class="ios-card p-3">
+                <div class="flex text-[10px] font-bold text-gray-400 px-2 mb-2 tracking-wider">
+                    <div class="w-1/2">ITEM DESCRIPTION</div>
+                    <div class="w-1/4 text-center">QTY</div>
+                    <div class="w-1/4 text-right">RATE</div>
+                </div>
+                <div id="inv-items-box" class="space-y-2"></div>
+                <button onclick="addInvRow()" class="mt-3 text-blue-500 font-bold text-sm w-full text-center border border-dashed border-blue-300 rounded-lg p-2 bg-blue-50">+ Add Line Item</button>
+            </div>
+
+            <div class="ios-card p-4 flex justify-between items-center bg-gray-900 text-white">
+                <span class="font-bold text-xs uppercase text-gray-400 tracking-widest">Grand Total</span>
                 <span id="inv-total-disp" class="text-2xl font-black text-blue-400">0.00</span>
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
-                <button onclick="saveInvoice()" class="bg-blue-600 text-white p-4 rounded-xl font-bold btn-action">SAVE ENTRY</button>
-                <button onclick="generatePDF()" class="bg-black text-white p-4 rounded-xl font-bold btn-action">PRINT PDF</button>
+            <div class="flex gap-2">
+                <button onclick="saveInvoice()" class="ios-btn bg-blue-600 text-white w-1/2">SAVE ENTRY</button>
+                <button onclick="generatePDF()" class="ios-btn bg-black text-white w-1/2">PRINT PDF</button>
             </div>
-        </section>
+        </div>
 
-        <section id="view-ledger-detail" class="hidden space-y-4">
-            <div id="ledger-header" class="ios-card bg-blue-600 text-white">
-                <h2 id="party-title" class="text-2xl font-black">Account Name</h2>
-                <div class="flex justify-between mt-2 text-xs opacity-80 font-mono">
-                    <span>Balance Summary:</span>
-                    <span id="party-balance-total">0.00</span>
+        <div id="view-voucher" class="hidden-view space-y-4">
+            <div class="segmented-control">
+                <div id="vou-rct" onclick="setVouType('RECEIPT')" class="segment active">Receipt (Cash In)</div>
+                <div id="vou-pay" onclick="setVouType('PAYMENT')" class="segment">Payment (Cash Out)</div>
+            </div>
+
+            <div class="ios-card p-4">
+                <div class="flex gap-2">
+                    <input type="text" id="vou-no" readonly class="ios-input font-mono bg-gray-100 w-1/2">
+                    <input type="date" id="vou-date" class="ios-input w-1/2">
                 </div>
+                <select id="vou-party" class="ios-input font-bold"></select>
+                <input type="number" id="vou-amt" placeholder="Amount (HKD)" class="ios-input text-xl font-bold text-green-600 bg-green-50 text-center">
+                <input type="text" id="vou-desc" placeholder="Remarks / Details" class="ios-input">
+                <button onclick="saveVoucher()" class="ios-btn bg-green-600 text-white mt-2">POST VOUCHER</button>
             </div>
-            <div class="ios-card !p-0 overflow-hidden">
-                <div class="bg-gray-100 p-2 grid grid-cols-4 text-[9px] font-bold uppercase text-gray-500 text-center">
-                    <span>Date</span><span>Particulars</span><span>Dr/Cr</span><span>Balance</span>
-                </div>
-                <div id="ledger-rows-container"></div>
+        </div>
+
+        <div id="view-settings" class="hidden-view space-y-4">
+            <div class="ios-card p-4">
+                <h3 class="text-sm font-black text-gray-700 mb-4 border-b pb-2">COMPANY CONFIGURATION</h3>
+                <input type="text" id="set-name" placeholder="Company Name" class="ios-input font-bold">
+                <input type="text" id="set-address" placeholder="Company Address" class="ios-input">
+                <input type="text" id="set-phone" placeholder="Phone Number" class="ios-input">
+                <input type="text" id="set-email" placeholder="Email Address" class="ios-input">
+                <textarea id="set-bank" placeholder="Bank Details (for Invoice PDF)" class="ios-input" rows="3"></textarea>
+                <button onclick="saveSettings()" class="ios-btn bg-gray-900 text-white mt-2">Update System Info</button>
             </div>
-        </section>
-
-        <section id="view-history" class="hidden space-y-4">
-            <h3 class="font-bold text-gray-400 text-xs uppercase">Recent Transactions</h3>
-            <div id="history-list" class="space-y-2"></div>
-        </section>
-
-    </main>
-
-    <nav class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t flex justify-around py-3 pb-8 z-50">
-        <div onclick="switchView('dashboard')" class="text-center cursor-pointer">
-            <div id="tab-home" class="text-2xl tab-active">🏠</div>
-            <div class="text-[10px] font-bold">Home</div>
         </div>
-        <div onclick="switchView('invoice')" class="text-center cursor-pointer">
-            <div id="tab-invoice" class="text-2xl text-gray-400">📄</div>
-            <div class="text-[10px] font-bold">Invoice</div>
+
+    </div>
+
+    <div class="tab-bar">
+        <div onclick="switchView('dashboard')" id="tab-dashboard" class="tab-item active">
+            <span class="tab-icon">🏠</span><span>Home</span>
         </div>
-        <div onclick="switchView('accounts')" class="text-center cursor-pointer">
-            <div id="tab-accounts" class="text-2xl text-gray-400">👤</div>
-            <div class="text-[10px] font-bold">Ledger</div>
+        <div onclick="switchView('ledgers')" id="tab-ledgers" class="tab-item">
+            <span class="tab-icon">📊</span><span>Ledgers</span>
         </div>
-    </nav>
+        <div onclick="switchView('invoice')" id="tab-invoice" class="tab-item">
+            <span class="tab-icon">📄</span><span>Invoices</span>
+        </div>
+        <div onclick="switchView('voucher')" id="tab-voucher" class="tab-item">
+            <span class="tab-icon">💸</span><span>Cash</span>
+        </div>
+    </div>
+
 </div>
 
 <script>
-    // --- APP DATABASE (Swift Logic) ---
-    let db = JSON.parse(localStorage.getItem('2Smart_Ultra_V1')) || {
-        config: { name: '2Smart Pvt Limited', address: 'Flat C 11/F Hang Wan Bldg', bank: 'HSBC: 123-456-789', phone: '+852' },
-        parties: [{id: '1', name: 'Cash Sale', bal: 0}, {id: '2', name: 'Walking Customer', bal: 0}],
+    // --- DATABASE INITIALIZATION ---
+    let db = JSON.parse(localStorage.getItem('2Smart_Pro_DB')) || {
+        config: { name: '2SMART PVT LIMITED', address: 'Flat C 11/F Hang Wan Bldg, HK', phone: '+852 XXXX', email: 'info@2smart.com', bank: 'HSBC A/C: 123-456' },
+        parties: [],
         transactions: []
     };
 
-    let navStack = ['dashboard'];
+    let newAccType = 'Receivable';
     let currentInvType = 'SALE';
+    let currentVouType = 'RECEIPT';
 
-    function save() { 
-        localStorage.setItem('2Smart_Ultra_V1', JSON.stringify(db)); 
-        renderFrontLedger();
-        updateDash();
+    function saveData() {
+        localStorage.setItem('2Smart_Pro_DB', JSON.stringify(db));
     }
 
-    // --- NAVIGATION (Swift-Style) ---
-    function switchView(viewId, isBack = false) {
-        document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
-        document.getElementById('view-' + viewId).classList.remove('hidden');
+    // --- NAVIGATION LOGIC ---
+    function switchView(viewId) {
+        document.querySelectorAll('#main-content > div').forEach(div => div.classList.add('hidden-view'));
+        document.getElementById('view-' + viewId).classList.remove('hidden-view');
         
-        // Update Title & Nav
-        const titles = { 'dashboard': '2Smart Home', 'invoice': 'New Entry', 'ledger-detail': 'Statement', 'history': 'Audit Log' };
-        document.getElementById('screen-title').innerText = titles[viewId] || viewId.toUpperCase();
-        document.getElementById('back-nav').classList.toggle('hidden', viewId === 'dashboard');
+        // Dynamic Title Map
+        const titles = { 
+            'dashboard': db.config.name, 
+            'accounts-manager': 'Add/Edit Accounts', 
+            'ledgers': 'Party Ledgers', 
+            'statement': 'Statement',
+            'invoice': 'Invoicing Center', 
+            'voucher': 'Cash Management', 
+            'settings': 'System Settings' 
+        };
+        document.getElementById('nav-title').innerText = titles[viewId] || '2Smart';
 
-        if(!isBack && viewId !== navStack[navStack.length-1]) navStack.push(viewId);
-
-        if(viewId === 'invoice') resetInvoice();
-        if(viewId === 'history') renderHistory();
-        if(viewId === 'dashboard') renderFrontLedger();
-        
-        populateParties();
-    }
-
-    function goBack() {
-        if(navStack.length > 1) {
-            navStack.pop();
-            switchView(navStack[navStack.length-1], true);
+        // Tab Activation
+        document.querySelectorAll('.tab-item').forEach(tab => tab.classList.remove('active'));
+        if(document.getElementById('tab-' + viewId)) {
+            document.getElementById('tab-' + viewId).classList.add('active');
+        } else if (viewId === 'statement' || viewId === 'accounts-manager') {
+            document.getElementById('tab-ledgers').classList.add('active');
         }
+
+        // Logic based on view
+        if(viewId === 'dashboard') calcNetBalance();
+        if(viewId === 'ledgers') renderAccounts();
+        if(viewId === 'settings') loadSettings();
+        if(viewId === 'invoice') { resetInvoice(); loadParties('inv-party'); }
+        if(viewId === 'voucher') { resetVoucher(); loadParties('vou-party'); }
     }
 
-    // --- FRONT LEDGER LOGIC ---
-    function renderFrontLedger() {
-        const container = document.getElementById('front-ledger-list');
-        // Sort parties by balance importance
-        const topParties = [...db.parties].slice(0, 5);
-        container.innerHTML = topParties.map(p => {
-            const bal = getPartyBalance(p.id);
-            return `
-                <div onclick="openPartyLedger('${p.id}')" class="flex justify-between items-center p-2 border-b border-gray-50 cursor-pointer active:bg-gray-50 rounded-lg">
-                    <div>
-                        <div class="font-bold text-sm">${p.name}</div>
-                        <div class="text-[9px] text-gray-400 uppercase">A/C: 2S-${p.id}</div>
-                    </div>
-                    <div class="text-right">
-                        <div class="font-black ${bal >= 0 ? 'text-green-600' : 'text-red-500'}">HKD ${Math.abs(bal).toLocaleString()}</div>
-                        <div class="text-[9px] font-bold text-gray-300">${bal >= 0 ? 'RECEIVABLE' : 'PAYABLE'}</div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    }
-
-    function getPartyBalance(pid) {
-        return db.transactions.filter(t => t.partyId === pid).reduce((acc, t) => {
+    // --- DASHBOARD CALCULATION ---
+    function calcNetBalance() {
+        let bal = db.transactions.reduce((acc, t) => {
             if(t.type === 'SALE' || t.type === 'PAYMENT') return acc + t.amount;
             return acc - t.amount;
         }, 0);
+        document.getElementById('dash-net-bal').innerText = "HKD " + bal.toLocaleString(undefined, {minimumFractionDigits: 2});
+    }
+
+    // --- ACCOUNTS & LEDGERS ---
+    function setNewAccType(type) {
+        newAccType = type;
+        document.getElementById('type-rec').classList.toggle('active', type === 'Receivable');
+        document.getElementById('type-pay').classList.toggle('active', type === 'Payable');
+    }
+
+    function addAccount() {
+        const name = document.getElementById('new-acc-name').value.trim();
+        if(!name) return alert('Enter party name');
+        db.parties.push({ id: Date.now().toString(), name: name.toUpperCase(), type: newAccType });
+        saveData();
+        document.getElementById('new-acc-name').value = '';
+        alert('Account Created!');
+        switchView('ledgers');
+    }
+
+    function renderAccounts() {
+        const search = (document.getElementById('search-acc').value || '').toLowerCase();
+        let html = '';
+        db.parties.filter(p => p.name.toLowerCase().includes(search)).forEach(p => {
+            let bal = getPartyBal(p.id);
+            html += `
+                <div onclick="openStatement('${p.id}')" class="ios-card p-4 flex justify-between items-center cursor-pointer border-l-4 ${bal >= 0 ? 'border-green-500' : 'border-red-500'} active:bg-gray-50">
+                    <div>
+                        <div class="font-bold text-sm text-gray-800">${p.name}</div>
+                        <div class="text-[10px] text-gray-400">${p.type}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-black ${bal >= 0 ? 'text-green-600' : 'text-red-600'}">${Math.abs(bal).toLocaleString(undefined, {minimumFractionDigits:2})}</div>
+                        <div class="text-[9px] font-bold text-gray-400">${bal >= 0 ? 'DR' : 'CR'}</div>
+                    </div>
+                </div>
+            `;
+        });
+        document.getElementById('accounts-list').innerHTML = html || '<div class="text-center p-4 text-gray-400 text-sm">No accounts found</div>';
+    }
+
+    function getPartyBal(pid) {
+        return db.transactions.filter(t => t.partyId === pid).reduce((acc, t) => {
+            let isDr = (t.type === 'SALE' || t.type === 'PAYMENT');
+            return isDr ? acc + t.amount : acc - t.amount;
+        }, 0);
+    }
+
+    function openStatement(pid) {
+        const p = db.parties.find(x => x.id === pid);
+        switchView('statement');
+        document.getElementById('stmt-name').innerText = p.name;
+        
+        const txs = db.transactions.filter(t => t.partyId === pid).sort((a,b) => new Date(a.date) - new Date(b.date));
+        let bal = 0; let html = '';
+        
+        txs.forEach(t => {
+            let dr = (t.type === 'SALE' || t.type === 'PAYMENT') ? t.amount : 0;
+            let cr = (t.type === 'PURCHASE' || t.type === 'RECEIPT') ? t.amount : 0;
+            bal += (dr - cr);
+            html += `
+                <tr>
+                    <td class="text-gray-500 whitespace-nowrap">${t.date}</td>
+                    <td class="font-bold text-gray-700">${t.refNo} <br><span class="text-[9px] text-gray-400 font-normal">${t.desc || t.type}</span></td>
+                    <td class="text-green-600">${dr > 0 ? dr.toLocaleString() : '-'}</td>
+                    <td class="text-red-500">${cr > 0 ? cr.toLocaleString() : '-'}</td>
+                    <td class="font-black bg-gray-50">${bal.toLocaleString()}</td>
+                </tr>
+            `;
+        });
+        document.getElementById('stmt-body').innerHTML = html || '<tr><td colspan="5" class="text-center text-gray-400 py-6">No Transactions</td></tr>';
+        document.getElementById('stmt-bal').innerText = "HKD " + bal.toLocaleString(undefined, {minimumFractionDigits:2});
+        document.getElementById('stmt-bal').className = bal >= 0 ? "text-xl font-bold text-green-300" : "text-xl font-bold text-red-300";
     }
 
     // --- INVOICE ENGINE ---
-    function toggleInvType(type) {
+    function setInvType(type) {
         currentInvType = type;
-        document.getElementById('type-sale').className = type === 'SALE' ? 'flex-1 py-2 rounded-lg font-bold bg-white shadow-sm' : 'flex-1 py-2 rounded-lg font-bold';
-        document.getElementById('type-pur').className = type === 'PURCHASE' ? 'flex-1 py-2 rounded-lg font-bold bg-white shadow-sm' : 'flex-1 py-2 rounded-lg font-bold';
+        document.getElementById('inv-sale').classList.toggle('active', type === 'SALE');
+        document.getElementById('inv-pur').classList.toggle('active', type === 'PURCHASE');
         resetInvoice();
     }
 
     function resetInvoice() {
-        const prefix = currentInvType === 'SALE' ? 'SIN' : 'PUR';
-        document.getElementById('inv-no').value = prefix + "-" + (db.transactions.length + 1001);
+        const prefix = currentInvType === 'SALE' ? 'INV' : 'PUR';
+        document.getElementById('inv-no').value = prefix + "-" + Math.floor(1000 + Math.random() * 9000);
         document.getElementById('inv-date').valueAsDate = new Date();
         document.getElementById('inv-items-box').innerHTML = '';
         addInvRow();
-        calcTotal();
+        calcInvTotal();
     }
 
     function addInvRow() {
         const d = document.createElement('div');
-        d.className = "flex gap-2 bg-white p-2 rounded-lg shadow-sm items-center";
+        d.className = "flex gap-2 items-center bg-gray-50 p-1 rounded";
         d.innerHTML = `
-            <input type="text" placeholder="Item/Lot Name" class="flex-1 !p-1 !bg-transparent text-sm">
-            <input type="number" placeholder="Qty" oninput="calcTotal()" class="w-16 !p-1 !bg-transparent text-center text-sm">
-            <input type="number" placeholder="Rate" oninput="calcTotal()" class="w-20 !p-1 !bg-transparent text-right font-bold text-sm">
+            <input type="text" placeholder="Item Name" class="w-1/2 p-2 bg-transparent outline-none text-sm font-bold border-b border-gray-200">
+            <input type="number" placeholder="Qty" oninput="calcInvTotal()" class="w-1/4 p-2 bg-transparent outline-none text-center text-sm border-b border-gray-200">
+            <input type="number" placeholder="Rate" oninput="calcInvTotal()" class="w-1/4 p-2 bg-transparent outline-none text-right font-bold text-blue-600 text-sm border-b border-gray-200">
         `;
         document.getElementById('inv-items-box').appendChild(d);
     }
 
-    function calcTotal() {
-        let total = 0;
+    function calcInvTotal() {
+        let t = 0;
         document.querySelectorAll('#inv-items-box > div').forEach(r => {
-            const q = r.querySelectorAll('input')[1].value || 0;
-            const rt = r.querySelectorAll('input')[2].value || 0;
-            total += q * rt;
+            const q = parseFloat(r.querySelectorAll('input')[1].value) || 0;
+            const rt = parseFloat(r.querySelectorAll('input')[2].value) || 0;
+            t += (q * rt);
         });
-        document.getElementById('inv-total-disp').innerText = total.toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('inv-total-disp').innerText = t.toLocaleString(undefined, {minimumFractionDigits: 2});
+        return t;
     }
 
     function saveInvoice() {
-        const amt = parseFloat(document.getElementById('inv-total-disp').innerText.replace(/,/g, ''));
-        if(amt <= 0) return alert("Empty Invoice!");
-        
-        const p = document.getElementById('inv-party-select');
-        const items = [];
+        const pid = document.getElementById('inv-party').value;
+        const total = calcInvTotal();
+        if(!pid) return alert('Please select a party');
+        if(total <= 0) return alert('Invoice total cannot be 0');
+
+        let items = [];
         document.querySelectorAll('#inv-items-box > div').forEach(r => {
-            items.push({ name: r.querySelectorAll('input')[0].value, qty: r.querySelectorAll('input')[1].value, rate: r.querySelectorAll('input')[2].value });
+            items.push({ 
+                desc: r.querySelectorAll('input')[0].value, 
+                qty: r.querySelectorAll('input')[1].value, 
+                rate: r.querySelectorAll('input')[2].value 
+            });
         });
 
         db.transactions.push({
             id: Date.now(),
-            no: document.getElementById('inv-no').value,
+            refNo: document.getElementById('inv-no').value,
             date: document.getElementById('inv-date').value,
-            partyId: p.value,
-            partyName: p.options[p.selectedIndex].text,
+            partyId: pid,
             type: currentInvType,
-            amount: amt,
+            amount: total,
             items: items
         });
-        save();
-        alert("Transaction Recorded!");
+        saveData();
+        alert('Invoice Saved Successfully!');
         switchView('dashboard');
     }
 
-    // --- PDF ENGINE (Pro Layout) ---
+    // --- PDF GENERATOR (Professional Layout) ---
     function generatePDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
@@ -277,89 +406,115 @@
         doc.setFontSize(22); doc.setTextColor(0, 122, 255);
         doc.text(db.config.name, 15, 20);
         doc.setFontSize(10); doc.setTextColor(100);
-        doc.text(db.config.address, 15, 28);
-        doc.text("Phone: " + db.config.phone, 15, 33);
+        doc.text(db.config.address || '', 15, 28);
+        doc.text(`Phone: ${db.config.phone || ''} | Email: ${db.config.email || ''}`, 15, 33);
         
+        // Line
         doc.setDrawColor(200); doc.line(15, 38, 195, 38);
         
-        // Bill Info
+        // Bill To
+        const p = document.getElementById('inv-party');
         doc.setFontSize(12); doc.setTextColor(0);
-        doc.text("INVOICE TO:", 15, 50);
+        doc.text("BILL TO:", 15, 50);
         doc.setFont("helvetica", "bold");
-        doc.text(document.getElementById('inv-party-select').options[document.getElementById('inv-party-select').selectedIndex].text, 15, 56);
+        doc.text(p.options[p.selectedIndex]?.text || 'N/A', 15, 56);
         
         doc.setFont("helvetica", "normal");
-        doc.text("No: " + document.getElementById('inv-no').value, 150, 50);
-        doc.text("Date: " + document.getElementById('inv-date').value, 150, 56);
+        doc.text("Invoice No: " + document.getElementById('inv-no').value, 140, 50);
+        doc.text("Date: " + document.getElementById('inv-date').value, 140, 56);
 
-        // Table
+        // AutoTable for Items
         const rows = [];
         document.querySelectorAll('#inv-items-box > div').forEach(r => {
-            rows.push([r.querySelectorAll('input')[0].value, r.querySelectorAll('input')[1].value, r.querySelectorAll('input')[2].value, (r.querySelectorAll('input')[1].value * r.querySelectorAll('input')[2].value).toFixed(2)]);
+            let q = r.querySelectorAll('input')[1].value || 0;
+            let rt = r.querySelectorAll('input')[2].value || 0;
+            let d = r.querySelectorAll('input')[0].value || '-';
+            rows.push([d, q, parseFloat(rt).toFixed(2), (q * rt).toFixed(2)]);
         });
 
         doc.autoTable({
             startY: 70,
-            head: [['Description', 'Qty', 'Rate', 'Amount']],
+            head: [['Item Description', 'Qty', 'Unit Price', 'Total Amount']],
             body: rows,
-            theme: 'striped',
+            theme: 'grid',
             headStyles: { fillColor: [0, 122, 255] }
         });
 
         // Footer
         const finalY = doc.lastAutoTable.finalY + 10;
-        doc.setFontSize(14); doc.text("Total: HKD " + document.getElementById('inv-total-disp').innerText, 150, finalY);
+        doc.setFontSize(14); doc.setFont("helvetica", "bold");
+        doc.text(`GRAND TOTAL: HKD ${document.getElementById('inv-total-disp').innerText}`, 130, finalY);
         
-        doc.setFontSize(8); doc.text("Bank Details: " + db.config.bank, 15, finalY + 20);
-        doc.text("This is a computer generated invoice.", 15, finalY + 30);
+        doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(100);
+        doc.text("Bank Details:", 15, finalY + 15);
+        doc.text(db.config.bank || '', 15, finalY + 20);
 
         doc.save(document.getElementById('inv-no').value + ".pdf");
     }
 
-    // --- DATA UTILS ---
-    function populateParties() {
-        const h = db.parties.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
-        const selects = ['inv-party-select'];
-        selects.forEach(id => { if(document.getElementById(id)) document.getElementById(id).innerHTML = h; });
+    // --- VOUCHER ENGINE ---
+    function setVouType(type) {
+        currentVouType = type;
+        document.getElementById('vou-rct').classList.toggle('active', type === 'RECEIPT');
+        document.getElementById('vou-pay').classList.toggle('active', type === 'PAYMENT');
+        resetVoucher();
     }
 
-    function openPartyLedger(pid) {
-        const party = db.parties.find(p => p.id === pid);
-        switchView('ledger-detail');
-        document.getElementById('party-title').innerText = party.name;
-        
-        const txs = db.transactions.filter(t => t.partyId === pid).sort((a,b) => new Date(a.date) - new Date(b.date));
-        let bal = 0;
-        let html = '';
-        txs.forEach(t => {
-            let dr = (t.type === 'SALE' || t.type === 'PAYMENT') ? t.amount : 0;
-            let cr = (t.type === 'PURCHASE' || t.type === 'RECEIPT') ? t.amount : 0;
-            bal += (dr - cr);
-            html += `
-                <div class="grid grid-cols-4 text-[10px] p-3 border-b text-center items-center">
-                    <span class="text-gray-400">${t.date}</span>
-                    <span class="font-bold">${t.no}</span>
-                    <span class="${dr > 0 ? 'text-red-500' : 'text-green-600'}">${dr > 0 ? dr : cr}</span>
-                    <span class="font-black bg-blue-50 py-1 rounded">HKD ${bal}</span>
-                </div>
-            `;
+    function resetVoucher() {
+        const prefix = currentVouType === 'RECEIPT' ? 'RCT' : 'PAY';
+        document.getElementById('vou-no').value = prefix + "-" + Math.floor(1000 + Math.random() * 9000);
+        document.getElementById('vou-date').valueAsDate = new Date();
+        document.getElementById('vou-amt').value = '';
+        document.getElementById('vou-desc').value = '';
+    }
+
+    function saveVoucher() {
+        const pid = document.getElementById('vou-party').value;
+        const amt = parseFloat(document.getElementById('vou-amt').value) || 0;
+        if(!pid) return alert('Select a party');
+        if(amt <= 0) return alert('Enter valid amount');
+
+        db.transactions.push({
+            id: Date.now(),
+            refNo: document.getElementById('vou-no').value,
+            date: document.getElementById('vou-date').value,
+            partyId: pid,
+            type: currentVouType,
+            amount: amt,
+            desc: document.getElementById('vou-desc').value
         });
-        document.getElementById('ledger-rows-container').innerHTML = html || '<p class="p-10 text-center">No Data</p>';
-        document.getElementById('party-balance-total').innerText = "HKD " + bal.toLocaleString();
+        saveData();
+        alert('Voucher Posted!');
+        switchView('dashboard');
     }
 
-    function updateDash() {
-        let total = 0;
-        db.transactions.forEach(t => {
-            if(t.type === 'SALE' || t.type === 'PAYMENT') total += t.amount;
-            else total -= t.amount;
-        });
-        document.getElementById('total-cash').innerText = "HKD " + total.toLocaleString();
+    // --- UTILS & SETTINGS ---
+    function loadParties(selectId) {
+        const html = db.parties.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+        document.getElementById(selectId).innerHTML = html || '<option value="">No Accounts Added</option>';
     }
 
-    // Initial Load
+    function loadSettings() {
+        document.getElementById('set-name').value = db.config.name;
+        document.getElementById('set-address').value = db.config.address;
+        document.getElementById('set-phone').value = db.config.phone;
+        document.getElementById('set-email').value = db.config.email;
+        document.getElementById('set-bank').value = db.config.bank;
+    }
+
+    function saveSettings() {
+        db.config.name = document.getElementById('set-name').value;
+        db.config.address = document.getElementById('set-address').value;
+        db.config.phone = document.getElementById('set-phone').value;
+        db.config.email = document.getElementById('set-email').value;
+        db.config.bank = document.getElementById('set-bank').value;
+        saveData();
+        alert('System configuration updated.');
+        switchView('dashboard');
+    }
+
+    // App Init
     switchView('dashboard');
-    save();
 
 </script>
 </body>
