@@ -55,7 +55,7 @@
         <div id="view-dashboard" class="space-y-4">
             <div class="ios-card p-6 bg-gradient-to-br from-gray-900 to-black text-white shadow-lg">
                 <p class="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-1">Company Net Balance</p>
-                <h3 id="dash-net-bal" class="text-4xl font-black text-blue-400">HKD 0.00</h3>
+                <h3 id="dash-net-bal" class="text-4xl font-black text-blue-400">AMT 0.00</h3>
             </div>
 
             <h2 class="text-xs font-bold text-gray-500 uppercase mt-4 ml-1 tracking-wider">Quick Actions</h2>
@@ -187,7 +187,7 @@
                     <input type="date" id="vou-date" class="ios-input w-1/2">
                 </div>
                 <select id="vou-party" class="ios-input font-bold"></select>
-                <input type="number" id="vou-amt" placeholder="Amount (HKD)" class="ios-input text-xl font-bold text-green-600 bg-green-50 text-center">
+                <input type="number" id="vou-amt" placeholder="Amount (AMT)" class="ios-input text-xl font-bold text-green-600 bg-green-50 text-center">
                 <input type="text" id="vou-desc" placeholder="Remarks / Details" class="ios-input">
                 <button onclick="saveVoucher()" class="ios-btn bg-green-600 text-white mt-2">POST VOUCHER</button>
             </div>
@@ -283,7 +283,7 @@
             if(t.type === 'SALE' || t.type === 'PAYMENT') return acc + t.amount;
             return acc - t.amount;
         }, 0);
-        document.getElementById('dash-net-bal').innerText = "HKD " + bal.toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('dash-net-bal').innerText = "AMT " + bal.toLocaleString(undefined, {minimumFractionDigits: 2});
     }
 
     // --- SAVED RECORDS (HISTORY) ENGINE (EDIT/DELETE) ---
@@ -303,7 +303,7 @@
                             <div class="text-[10px] text-gray-500 uppercase">${pName} | ${t.date}</div>
                         </div>
                         <div class="text-right">
-                            <div class="text-sm font-black text-gray-800">HKD ${t.amount.toLocaleString(undefined, {minimumFractionDigits:2})}</div>
+                            <div class="text-sm font-black text-gray-800">AMT ${t.amount.toLocaleString(undefined, {minimumFractionDigits:2})}</div>
                             <div class="text-[9px] font-bold text-gray-400">${t.type}</div>
                         </div>
                     </div>
@@ -410,7 +410,7 @@
 
         const finalY = doc.lastAutoTable.finalY + 10;
         doc.setFontSize(14); doc.setFont("helvetica", "bold");
-        doc.text(`GRAND TOTAL: HKD ${t.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}`, 130, finalY);
+        doc.text(`GRAND TOTAL: AMT ${t.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}`, 130, finalY);
         
         doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(100);
         doc.text("Bank Details:", 15, finalY + 15);
@@ -501,7 +501,7 @@
             `;
         });
         document.getElementById('stmt-body').innerHTML = html || '<tr><td colspan="5" class="text-center text-gray-400 py-6">No Transactions</td></tr>';
-        document.getElementById('stmt-bal').innerText = "HKD " + bal.toLocaleString(undefined, {minimumFractionDigits:2});
+        document.getElementById('stmt-bal').innerText = "AMT " + bal.toLocaleString(undefined, {minimumFractionDigits:2});
         document.getElementById('stmt-bal').className = bal >= 0 ? "text-xl font-bold text-green-300" : "text-xl font-bold text-red-300";
     }
 
@@ -677,7 +677,7 @@
 
         const finalY = doc.lastAutoTable.finalY + 10;
         doc.setFontSize(14); doc.setFont("helvetica", "bold");
-        doc.text(`GRAND TOTAL: HKD ${document.getElementById('inv-total-disp').innerText}`, 130, finalY);
+        doc.text(`GRAND TOTAL: AMT ${document.getElementById('inv-total-disp').innerText}`, 130, finalY);
         
         doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(100);
         doc.text("Bank Details:", 15, finalY + 15);
