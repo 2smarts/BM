@@ -86,7 +86,18 @@
                     <div class="font-bold text-sm text-gray-800">Saved Records (History)</div>
                     <div class="text-[10px] text-gray-500">View, Edit, Delete & Print Old Entries</div>
                 </div>
+                <div onclick="exportBackup()" class="ios-card p-4 cursor-pointer border-l-4 border-green-500 active:scale-95 transition-transform">
+                <div class="text-2xl mb-1">📤</div>
+                <div class="font-bold text-sm text-gray-800">Save Backup</div>
+                <div class="text-[10px] text-gray-400">Export JSON for Excel/Restore</div>
             </div>
+
+            <div onclick="document.getElementById('importFile').click()" class="ios-card p-4 cursor-pointer border-l-4 border-orange-500 active:scale-95 transition-transform">
+                <div class="text-2xl mb-1">📥</div>
+                <div class="font-bold text-sm text-gray-800">Restore Data</div>
+                <div class="text-[10px] text-gray-400">Upload Backup File</div>
+            </div>
+            <input type="file" id="importFile" style="display:none" onchange="importBackup(event)" accept=".json">
         </div>
 
         <div id="view-history" class="hidden-view space-y-4">
@@ -783,6 +794,40 @@
         if(el) el.innerHTML = html;
     }
 
+    function exportBackup() {
+    const dataStr = JSON.stringify(db, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `2Smart_Backup_${new Date().toISOString().slice(0,10)}.json`;
+    link.click();
+    alert("Backup file create ho gayi hai. Isay aap Files app mein save kar sakte hain.");
+}
+
+function importBackup(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const importedData = JSON.parse(e.target.result);
+            if (importedData.parties && importedData.transactions) {
+                if (confirm("Restore karne se purana data delete ho jayega. Continue?")) {
+                    db = importedData;
+                    saveData();
+                    location.reload();
+                }
+            } else {
+                alert("Ghalat file format!");
+            }
+        } catch (err) {
+            alert("File read karne mein error!");
+        }
+    };
+    reader.readAsText(file);
+}
+    
 </script>
 </body>
 </html>
