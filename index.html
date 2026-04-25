@@ -424,7 +424,7 @@
 
         const finalY = doc.lastAutoTable.finalY + 10;
         doc.setFontSize(14); doc.setFont("helvetica", "bold");
-        doc.text(`GRAND TOTAL: AMT ${t.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}`, 130, finalY);
+        doc.text(`GRAND TOTAL: AMT ${t.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}`, 15, finalY);
         
         doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(100);
         doc.text("Bank Details:", 15, finalY + 15);
