@@ -201,7 +201,7 @@
                     <input type="date" id="vou-date" class="ios-input w-1/2">
                 </div>
                 <select id="vou-party" class="ios-input font-bold"></select>
-                <input type="number" id="vou-amt" placeholder="Amount (AMT)" class="ios-input text-xl font-bold text-green-600 bg-green-50 text-center">
+                <input type="number" id="vou-amt" placeholder="Amount " class="ios-input text-xl font-bold text-green-600 bg-green-50 text-center">
                 <input type="text" id="vou-desc" placeholder="Remarks / Details" class="ios-input">
                 <button onclick="saveVoucher()" class="ios-btn bg-green-600 text-white mt-2">POST VOUCHER</button>
             </div>
@@ -297,7 +297,7 @@
             if(t.type === 'SALE' || t.type === 'PAYMENT') return acc + t.amount;
             return acc - t.amount;
         }, 0);
-        document.getElementById('dash-net-bal').innerText = "AMT " + bal.toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('dash-net-bal').innerText = "$" + bal.toLocaleString(undefined, {minimumFractionDigits: 2});
     }
 
     // --- SAVED RECORDS (HISTORY) ENGINE (EDIT/DELETE) ---
